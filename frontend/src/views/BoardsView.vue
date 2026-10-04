@@ -92,10 +92,13 @@ function progress(p) {
     </div>
 
     <!-- empty -->
-    <div v-else-if="!projects.loading" class="mt-6 border border-dashed border-steel/60 p-10 text-center">
-      <p class="font-mono text-[11px] uppercase tracking-widest text-steel">{{ t('boards.emptyTitle') }}</p>
-      <p class="mt-2 text-sm text-steel">{{ t('boards.emptyText') }}</p>
-      <Btn class="mt-4" @click="creating = true"><SvgIcon name="plus" :size="11" /> {{ t('boards.new') }}</Btn>
+    <div v-else-if="!projects.loading" class="mt-6 border border-ink bg-white">
+      <img src="/empty-board.jpg" alt="" class="h-44 w-full object-cover object-center sm:h-52" />
+      <div class="border-t border-line px-6 py-8 text-center">
+        <p class="font-mono text-[11px] uppercase tracking-widest text-steel">{{ t('boards.emptyTitle') }}</p>
+        <p class="mt-2 text-sm text-steel">{{ t('boards.emptyText') }}</p>
+        <Btn class="mt-4" @click="creating = true"><SvgIcon name="plus" :size="11" /> {{ t('boards.new') }}</Btn>
+      </div>
     </div>
 
     <p v-else class="mt-6 font-mono text-[11px] uppercase tracking-widest text-steel">{{ t('boards.loading') }}</p>

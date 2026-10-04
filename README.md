@@ -11,8 +11,17 @@ Minimalist industrial UI, no passwords: your Telegram identity is the account.
 Vue 3 (Vite, Pinia, Tailwind, vuedraggable)  ·  FastAPI (SQLAlchemy 2 async)  ·  PostgreSQL 16  ·  Docker
 ```
 
+## Screenshots
+
+![Landing](docs/screenshots/landing.jpg)
+
+![Projects](docs/screenshots/projects.jpg)
+
+![Board](docs/screenshots/board.jpg)
+
 ## Contents
 
+- [Screenshots](#screenshots)
 - [Features](#features)
 - [1. Quick start with Docker (no Telegram needed)](#1-quick-start-with-docker-no-telegram-needed)
 - [2. Local development](#2-local-development)

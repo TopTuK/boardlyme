@@ -45,6 +45,8 @@ export default {
     openApp: 'Open the app →',
     stack: 'Vue 3 · FastAPI · PostgreSQL · Telegram Mini App',
     fig: 'Fig. 1 — Board Assembly',
+    figShop: 'Fig. 2 — Shop floor',
+    figKit: 'Fig. 3 — Field kit',
     scale: 'Scale 1:1',
     capabilities: 'SYSTEM CAPABILITIES',
     modules: '5 modules / 0 bloat',
