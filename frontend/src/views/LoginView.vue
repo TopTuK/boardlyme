@@ -58,7 +58,7 @@ onMounted(async () => {
     <div class="w-full max-w-sm border-2 border-ink bg-paper shadow-offset">
       <header class="border-b-2 border-ink px-5 py-4">
         <div class="flex items-center gap-2">
-          <span class="flex h-8 w-8 items-center justify-center bg-ink font-mono text-[12px] font-bold text-paper">B</span>
+          <img src="/icon.png" alt="" width="32" height="32" class="h-8 w-8" />
           <div>
             <p class="text-sm font-black tracking-tight">BOARDLY</p>
             <p class="font-mono text-[9px] uppercase tracking-widest text-steel">{{ t('login.access') }}</p>

@@ -45,6 +45,8 @@ export default {
     openApp: 'Открыть приложение →',
     stack: 'Vue 3 · FastAPI · PostgreSQL · Telegram Mini App',
     fig: 'Рис. 1 — сборка доски',
+    figShop: 'Рис. 2 — цех',
+    figKit: 'Рис. 3 — полевой комплект',
     scale: 'Масштаб 1:1',
     capabilities: 'ВОЗМОЖНОСТИ СИСТЕМЫ',
     modules: '5 модулей / 0 лишнего',

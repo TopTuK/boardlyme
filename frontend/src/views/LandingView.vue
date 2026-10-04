@@ -26,7 +26,7 @@ const mock = computed(() => [
     <header class="border-b-2 border-ink">
       <div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <div class="flex items-center gap-2">
-          <span class="flex h-8 w-8 items-center justify-center bg-ink font-mono text-[12px] font-bold text-paper">B</span>
+          <img src="/icon.png" alt="" width="32" height="32" class="h-8 w-8" />
           <span class="text-base font-black tracking-tight">BOARDLY</span>
         </div>
         <RouterLink
@@ -100,6 +100,22 @@ const mock = computed(() => [
       </div>
     </section>
 
+    <!-- shop plate -->
+    <section class="border-b-2 border-ink">
+      <div class="mx-auto max-w-6xl px-4 py-10">
+        <figure class="relative">
+          <img
+            src="/hero-board.jpg"
+            :alt="t('landing.figShop')"
+            class="h-64 w-full border-2 border-ink object-cover object-[center_38%] sm:h-80 lg:h-[420px]"
+          />
+          <figcaption class="absolute -top-2.5 left-3 bg-paper px-1 font-mono text-[9px] uppercase tracking-widest text-steel">
+            {{ t('landing.figShop') }}
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
     <!-- features -->
     <section class="border-b-2 border-ink">
       <div class="mx-auto max-w-6xl px-4 py-14">
@@ -115,6 +131,22 @@ const mock = computed(() => [
           </article>
         </div>
       </div>
+    </section>
+
+    <!-- field kit -->
+    <section class="border-b-2 border-ink">
+      <figure class="relative">
+        <img
+          src="/desk-still.jpg"
+          :alt="t('landing.figKit')"
+          class="h-52 w-full object-cover object-[12%_72%] sm:h-64"
+        />
+        <figcaption
+          class="absolute bottom-3 right-4 bg-paper px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-steel sm:bottom-auto sm:right-10 sm:top-1/2 sm:-translate-y-1/2 sm:bg-transparent sm:px-0 sm:text-[10px]"
+        >
+          {{ t('landing.figKit') }}
+        </figcaption>
+      </figure>
     </section>
 
     <!-- telegram strip -->
