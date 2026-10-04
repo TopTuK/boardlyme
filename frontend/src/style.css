@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  @apply bg-paper font-sans text-ink;
+}
+
+::selection {
+  background: #e8590c;
+  color: #fff;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(22, 22, 22, 0.35) transparent;
+}
+
+/* Technical blueprint grid used on landing + board backgrounds */
+.bg-blueprint {
+  background-image: linear-gradient(rgba(22, 22, 22, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(22, 22, 22, 0.045) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* vuedraggable ghost card */
+.drag-ghost {
+  opacity: 0.35;
+}
+
+input[type='date']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+}

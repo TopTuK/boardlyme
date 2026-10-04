@@ -1,0 +1,11 @@
+# Development extras — opt in explicitly:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d db
+#
+# Publishes Postgres to the host so a natively running backend (uvicorn on
+# :8000) and Vite dev server (:5173) can use it. Not auto-loaded: the plain
+# `docker compose up` stack keeps everything internal.
+
+services:
+  db:
+    ports:
+      - "5432:5432"
