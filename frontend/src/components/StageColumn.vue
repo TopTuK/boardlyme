@@ -207,7 +207,7 @@ function addTask(payload) {
         </span>
         <span class="font-mono text-[10px] font-medium tabular-nums text-[#3E6B52]">{{ String(doneTasks.length).padStart(2, '0') }}</span>
       </div>
-      <div class="relative flex min-h-0 max-h-56 flex-col">
+      <div class="relative flex min-h-[40px] max-h-56 flex-col">
         <p
           v-if="!doneTasks.length"
           class="pointer-events-none absolute inset-x-0 top-0 px-3 pt-3 text-center text-[13px] text-steel"

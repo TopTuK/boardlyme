@@ -24,9 +24,5 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.alter_column(
-        "checklist_items",
-        "created_at",
-        existing_type=sa.DateTime(timezone=True),
-        nullable=True,
-    )
+    # 0005 already creates created_at NOT NULL, so reversing 0006 must not reopen it.
+    pass
