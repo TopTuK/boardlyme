@@ -82,7 +82,7 @@ function addTask(payload) {
 
 <template>
   <section
-    class="stage flex max-h-full w-64 shrink-0 flex-col overflow-hidden border border-ink/10 sm:w-72"
+    class="stage flex h-full max-h-full min-h-0 w-64 shrink-0 flex-col overflow-hidden border border-ink/10 sm:w-72"
     :style="{ '--stage': accent }"
   >
     <header class="stage-head border-b border-line">
@@ -173,16 +173,23 @@ function addTask(payload) {
           {{ tasks.length }}/{{ stage.wip_limit }}
         </span>
       </div>
-      <draggable
-        :list="tasks"
-        :group="{ name: 'tasks' }"
-        item-key="id"
-        :animation="150"
-        ghost-class="drag-ghost"
-        handle=".card-grip"
-        class="min-h-[40px] flex-1 space-y-2 overflow-y-auto p-2"
-        @change="(evt) => onChange(evt, false)"
-      >
+      <div class="relative min-h-0 flex-1">
+        <p
+          v-if="!tasks.length"
+          class="pointer-events-none absolute inset-x-0 top-0 px-3 pt-3 text-center text-[13px] text-steel"
+        >
+          {{ t('stage.empty') }}
+        </p>
+        <draggable
+          :list="tasks"
+          :group="{ name: 'tasks' }"
+          item-key="id"
+          :animation="150"
+          ghost-class="drag-ghost"
+          handle=".card-grip"
+          class="relative min-h-[40px] h-full space-y-2 overflow-y-auto p-2"
+          @change="(evt) => onChange(evt, false)"
+        >
         <template #item="{ element }">
           <TaskCard
             :task="element"
@@ -191,7 +198,8 @@ function addTask(payload) {
             @update="(patch) => $emit('update-task', element, patch)"
           />
         </template>
-      </draggable>
+        </draggable>
+      </div>
 
       <div class="flex items-center justify-between border-t border-line px-3 py-2">
         <span class="flex items-center gap-1.5 font-sans text-[11px] font-semibold tracking-tight text-[#3E6B52]">
@@ -199,16 +207,23 @@ function addTask(payload) {
         </span>
         <span class="font-mono text-[10px] font-medium tabular-nums text-[#3E6B52]">{{ String(doneTasks.length).padStart(2, '0') }}</span>
       </div>
-      <draggable
-        :list="doneTasks"
-        :group="{ name: 'tasks' }"
-        item-key="id"
-        :animation="150"
-        ghost-class="drag-ghost"
-        handle=".card-grip"
-        class="max-h-56 min-h-[40px] space-y-2 overflow-y-auto p-2"
-        @change="(evt) => onChange(evt, true)"
-      >
+      <div class="relative max-h-56 min-h-[40px]">
+        <p
+          v-if="!doneTasks.length"
+          class="pointer-events-none absolute inset-x-0 top-0 px-3 pt-3 text-center text-[13px] text-steel"
+        >
+          {{ t('stage.empty') }}
+        </p>
+        <draggable
+          :list="doneTasks"
+          :group="{ name: 'tasks' }"
+          item-key="id"
+          :animation="150"
+          ghost-class="drag-ghost"
+          handle=".card-grip"
+          class="relative max-h-56 min-h-[40px] space-y-2 overflow-y-auto p-2"
+          @change="(evt) => onChange(evt, true)"
+        >
         <template #item="{ element }">
           <TaskCard
             :task="element"
@@ -217,21 +232,28 @@ function addTask(payload) {
             @update="(patch) => $emit('update-task', element, patch)"
           />
         </template>
-      </draggable>
+        </draggable>
+      </div>
     </template>
 
     <!-- regular stage: single lane -->
-    <draggable
-      v-else
-      :list="tasks"
-      :group="{ name: 'tasks' }"
-      item-key="id"
-      :animation="150"
-      ghost-class="drag-ghost"
-      handle=".card-grip"
-      class="min-h-[60px] flex-1 space-y-2 overflow-y-auto p-2"
-      @change="(evt) => onChange(evt, false)"
-    >
+    <div v-else class="relative min-h-[60px] flex-1">
+      <p
+        v-if="!tasks.length"
+        class="pointer-events-none absolute inset-x-0 top-0 px-3 pt-3 text-center text-[13px] text-steel"
+      >
+        {{ t('stage.empty') }}
+      </p>
+      <draggable
+        :list="tasks"
+        :group="{ name: 'tasks' }"
+        item-key="id"
+        :animation="150"
+        ghost-class="drag-ghost"
+        handle=".card-grip"
+        class="relative min-h-[60px] h-full space-y-2 overflow-y-auto p-2"
+        @change="(evt) => onChange(evt, false)"
+      >
       <template #item="{ element }">
         <TaskCard
           :task="element"
@@ -240,7 +262,8 @@ function addTask(payload) {
           @update="(patch) => $emit('update-task', element, patch)"
         />
       </template>
-    </draggable>
+      </draggable>
+    </div>
 
     <footer v-if="stage.is_backlog" class="border-t border-line p-2">
       <TaskCard composing @create="addTask" />

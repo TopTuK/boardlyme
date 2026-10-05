@@ -252,6 +252,48 @@ export const useBoardStore = defineStore('board', {
       }
     },
 
+    // ------------------------------------------------------------------ #
+    // Checklist
+    // ------------------------------------------------------------------ #
+
+    async addChecklistItem(taskId, content) {
+      try {
+        const { data } = await api.post(`/tasks/${taskId}/checklist`, { content })
+        this.applyEvent({ type: 'task.updated', task: data })
+        return true
+      } catch (e) {
+        this._fail(e, 'errors.checklist')
+        return false
+      }
+    },
+
+    async updateChecklistItem(taskId, itemId, patch) {
+      try {
+        const { data } = await api.patch(`/checklist/items/${itemId}`, patch)
+        this.applyEvent({ type: 'task.updated', task: data })
+        return true
+      } catch (e) {
+        this._fail(e, 'errors.checklist')
+        return false
+      }
+    },
+
+    async removeChecklistItem(taskId, itemId) {
+      // The endpoint returns no body — drop the item locally (the WS
+      // broadcast upserts the full task for the other clients anyway).
+      const task = this.tasks.find((t) => t.id === taskId)
+      const backup = task?.checklist
+      if (task) task.checklist = (task.checklist || []).filter((i) => i.id !== itemId)
+      try {
+        await api.delete(`/checklist/items/${itemId}`)
+        return true
+      } catch (e) {
+        if (task) task.checklist = backup
+        this._fail(e, 'errors.checklist')
+        return false
+      }
+    },
+
     async addStage(name, wipLimit = null) {
       if (!this.project || !name.trim()) return false
       try {

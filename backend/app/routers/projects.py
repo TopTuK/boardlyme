@@ -124,7 +124,7 @@ async def get_board(project_id: uuid.UUID, user: UserDep, db: DbDep):
         await db.execute(
             select(Task)
             .where(Task.project_id == project_id)
-            .options(selectinload(Task.assignee))
+            .options(selectinload(Task.assignee), selectinload(Task.checklist))
             .order_by(Task.position, Task.created_at)
         )
     ).scalars().all()

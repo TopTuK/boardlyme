@@ -211,7 +211,7 @@ async function openAddStage() {
     </p>
 
     <!-- columns -->
-    <div class="flex flex-1 items-start gap-3 overflow-x-auto bg-blueprint p-3">
+    <div class="flex min-h-0 flex-1 items-stretch gap-3 overflow-x-auto bg-blueprint p-3">
       <StageColumn
         v-for="stage in store.visibleStages"
         :key="stage.id"

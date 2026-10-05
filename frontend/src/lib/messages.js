@@ -13,6 +13,8 @@ const API_KEYS = {
   'The project has no Backlog stage': 'api.noWorkStage',
   'New tasks can only be created in the Backlog': 'api.backlogOnly',
   'Task not found': 'api.taskNotFound',
+  'Task has unchecked checklist items': 'api.checklistIncomplete',
+  'Checklist item not found': 'api.checklistItemNotFound',
   'The project has no Done stage': 'api.noDoneStage',
   'WIP limits apply only to regular stages': 'api.wipRegularOnly',
   'Only regular stages can be split into sub-stages': 'api.splitRegularOnly',
