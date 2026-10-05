@@ -10,7 +10,8 @@ const CANONICAL_STAGES = {
 const API_KEYS = {
   'Assignee must be a member of the project': 'api.assigneeMustBeMember',
   'stage_id does not belong to this project': 'api.stageWrongProject',
-  'The project has no work stage': 'api.noWorkStage',
+  'The project has no Backlog stage': 'api.noWorkStage',
+  'New tasks can only be created in the Backlog': 'api.backlogOnly',
   'Task not found': 'api.taskNotFound',
   'The project has no Done stage': 'api.noDoneStage',
   'WIP limits apply only to regular stages': 'api.wipRegularOnly',

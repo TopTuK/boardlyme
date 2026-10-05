@@ -7,13 +7,14 @@ def test_new_task_defaults_to_backlog(client, make_project, board, stage_by_name
     assert response.json()["stage_done"] is False
 
 
-def test_create_task_in_explicit_stage(client, make_project, stage_by_name):
+def test_create_task_outside_backlog_rejected(client, make_project, stage_by_name):
     project, headers, _ = make_project()
     todo = stage_by_name(project["id"], headers, "ToDo")
-    task = client.post(
+    response = client.post(
         f"/api/projects/{project['id']}/tasks", json={"title": "x", "stage_id": todo["id"]}, headers=headers
-    ).json()
-    assert task["stage_id"] == todo["id"]
+    )
+    assert response.status_code == 400
+    assert "Backlog" in response.json()["detail"]
 
 
 def test_create_task_in_foreign_stage_rejected(client, make_project):
@@ -115,9 +116,7 @@ def test_move_into_done_substage(client, make_project, board, stage_by_name):
     project, headers, _ = make_project()
     active = stage_by_name(project["id"], headers, "Active")
     client.patch(f"/api/stages/{active['id']}", json={"is_split": True}, headers=headers)
-    task = client.post(
-        f"/api/projects/{project['id']}/tasks", json={"title": "x", "stage_id": active["id"]}, headers=headers
-    ).json()
+    task = client.post(f"/api/projects/{project['id']}/tasks", json={"title": "x"}, headers=headers).json()
 
     response = client.post(
         f"/api/tasks/{task['id']}/move",
@@ -130,17 +129,17 @@ def test_move_into_done_substage(client, make_project, board, stage_by_name):
     assert moved["completed_at"] is None  # sub-stage done is not global completion
 
 
-def test_create_task_directly_into_done_substage(client, make_project, stage_by_name):
+def test_create_task_directly_into_done_substage_rejected(client, make_project, stage_by_name):
     project, headers, _ = make_project()
     active = stage_by_name(project["id"], headers, "Active")
     client.patch(f"/api/stages/{active['id']}", json={"is_split": True}, headers=headers)
 
-    task = client.post(
+    response = client.post(
         f"/api/projects/{project['id']}/tasks",
         json={"title": "x", "stage_id": active["id"], "stage_done": True},
         headers=headers,
-    ).json()
-    assert task["stage_done"] is True
+    )
+    assert response.status_code == 400
 
 
 # --------------------------------------------------------------------------- #
@@ -155,15 +154,13 @@ def _limited_stage(client, make_project, stage_by_name, limit=2):
     return project, headers, todo
 
 
-def test_wip_limit_blocks_task_creation(client, make_project, stage_by_name):
+def test_wip_limit_blocks_task_creation(client, make_project, stage_by_name, create_task):
     project, headers, todo = _limited_stage(client, make_project, stage_by_name, limit=2)
-    for i in range(2):
-        response = client.post(
-            f"/api/projects/{project['id']}/tasks", json={"title": f"t{i}", "stage_id": todo["id"]}, headers=headers
-        )
-        assert response.status_code == 201
+    create_task(project["id"], headers, "t0", stage_id=todo["id"])
+    create_task(project["id"], headers, "t1", stage_id=todo["id"])
+    overflow = create_task(project["id"], headers, "overflow")
     response = client.post(
-        f"/api/projects/{project['id']}/tasks", json={"title": "overflow", "stage_id": todo["id"]}, headers=headers
+        f"/api/tasks/{overflow['id']}/move", json={"stage_id": todo["id"], "index": 0}, headers=headers
     )
     assert response.status_code == 409
     assert "WIP" in response.json()["detail"]

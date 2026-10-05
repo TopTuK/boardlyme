@@ -158,11 +158,14 @@ export const useBoardStore = defineStore('board', {
       }
     },
 
-    async createTask(stageId, title) {
-      if (!title.trim() || !this.project) return false
+    async createTask(stageId, payload) {
+      const title = (typeof payload === 'string' ? payload : payload?.title || '').trim()
+      const description = (typeof payload === 'string' ? '' : payload?.description || '').trim()
+      if (!title || !this.project) return false
       try {
         const { data } = await api.post(`/projects/${this.project.id}/tasks`, {
           title,
+          description: description || null,
           stage_id: stageId,
         })
         this.applyEvent({ type: 'task.created', task: data })

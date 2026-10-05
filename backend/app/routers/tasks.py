@@ -127,7 +127,6 @@ async def create_task(project_id: uuid.UUID, body: TaskCreate, user: UserDep, db
         if stage is None or stage.project_id != project_id:
             raise HTTPException(status_code=400, detail="stage_id does not belong to this project")
     else:
-        # New tasks default to the Backlog (or the first work stage as a fallback).
         stage = (
             (
                 await db.execute(
@@ -140,32 +139,21 @@ async def create_task(project_id: uuid.UUID, body: TaskCreate, user: UserDep, db
             .first()
         )
         if stage is None:
-            stage = (
-                (
-                    await db.execute(
-                        select(Stage)
-                        .where(Stage.project_id == project_id, Stage.is_done.is_(False))
-                        .order_by(Stage.position)
-                    )
-                )
-                .scalars()
-                .first()
-            )
-        if stage is None:
-            raise HTTPException(status_code=409, detail="The project has no work stage")
+            raise HTTPException(status_code=409, detail="The project has no Backlog stage")
 
-    if not body.stage_done:
-        await _check_wip(db, stage)
+    # New work always starts in the Backlog. Other columns are reached by moving.
+    if body.stage_done or not stage.is_backlog:
+        raise HTTPException(status_code=400, detail="New tasks can only be created in the Backlog")
 
     task = Task(
         project_id=project_id,
         stage_id=stage.id,
-        stage_done=bool(body.stage_done) and not stage.is_done,
+        stage_done=False,
         title=body.title.strip(),
         description=body.description or None,
         deadline=body.deadline,
         assignee_id=body.assignee_id,
-        position=await _next_position(db, stage.id, body.stage_done),
+        position=await _next_position(db, stage.id, False),
         created_by=user.id,
     )
     db.add(task)

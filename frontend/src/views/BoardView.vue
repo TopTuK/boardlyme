@@ -222,15 +222,16 @@ async function openAddStage() {
         @move="(taskId, index, lane) => store.moveTask(taskId, stage.id, index, lane)"
         @open-task="openTask"
         @complete="(task) => store.completeTask(task.id)"
+        @update-task="(task, patch) => store.updateTask(task.id, patch)"
         @rename="(name) => store.updateStage(stage.id, { name })"
         @delete="askDeleteStage(stage)"
-        @add-task="(title) => store.createTask(stage.id, title)"
+        @add-task="(payload) => store.createTask(stage.id, payload)"
         @set-wip="(value) => store.setWipLimit(stage.id, value)"
         @toggle-split="(value) => store.toggleSplit(stage.id, value)"
       />
 
       <!-- add stage -->
-      <div v-if="isOwner" class="w-64 shrink-0 border border-dashed border-steel/60 p-3 sm:w-72">
+      <div v-if="isOwner" class="w-64 shrink-0 border border-dashed border-ink/15 bg-[#F7F6F1] p-3 sm:w-72">
         <input
           v-if="addingStage"
           id="new-stage-input"

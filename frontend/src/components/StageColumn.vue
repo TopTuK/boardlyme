@@ -14,12 +14,11 @@ const props = defineProps({
   canManage: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['move', 'open-task', 'complete', 'rename', 'delete', 'add-task', 'set-wip', 'toggle-split'])
+const emit = defineEmits(['move', 'open-task', 'complete', 'update-task', 'rename', 'delete', 'add-task', 'set-wip', 'toggle-split'])
 const { t } = useI18n()
 
 const editing = ref(false)
 const editName = ref('')
-const newTitle = ref('')
 const renameInput = ref(null)
 const wipOpen = ref(false)
 const wipValue = ref('')
@@ -29,6 +28,15 @@ const total = computed(() => props.tasks.length + props.doneTasks.length)
 const wipFull = computed(
   () => props.stage.wip_limit != null && props.tasks.length >= props.stage.wip_limit,
 )
+
+// Work stations in line order. Backlog and Done keep their own marks.
+const WORK_ACCENTS = ['#3C5A73', '#E8590C', '#A67C42', '#5E4B8A', '#8C4A3A']
+const accent = computed(() => {
+  if (props.stage.is_backlog) return '#2C2C2A'
+  if (props.stage.is_done) return '#3E6B52'
+  const index = Math.max(0, props.stage.position - 1)
+  return WORK_ACCENTS[index % WORK_ACCENTS.length]
+})
 
 async function beginRename() {
   editName.value = props.stage.name
@@ -66,23 +74,26 @@ function onChange(evt, lane) {
   else if (evt.moved) emit('move', evt.moved.element.id, evt.moved.newIndex, lane)
 }
 
-function addTask() {
-  const value = newTitle.value.trim()
-  if (!value) return
-  newTitle.value = ''
-  emit('add-task', value)
+function addTask(payload) {
+  if (!payload?.title?.trim()) return
+  emit('add-task', payload)
 }
 </script>
 
 <template>
-  <section class="flex max-h-full w-64 shrink-0 flex-col border border-ink/80 bg-white sm:w-72">
-    <header class="border-b border-line px-3 py-2">
+  <section
+    class="stage flex max-h-full w-64 shrink-0 flex-col overflow-hidden border border-ink/10 sm:w-72"
+    :style="{ '--stage': accent }"
+  >
+    <header class="stage-head border-b border-line">
+      <div class="h-[3px] bg-[var(--stage)]" />
+      <div class="px-3 py-2.5">
       <template v-if="editing">
         <input
           :ref="(el) => (renameInput = el)"
           v-model="editName"
           maxlength="100"
-          class="w-full border-2 border-ink px-1.5 py-0.5 font-mono text-[11px] font-bold uppercase tracking-widest outline-none"
+          class="w-full border-2 border-ink bg-white px-1.5 py-1 font-sans text-sm font-semibold tracking-tight outline-none"
           @keydown.enter="saveRename"
           @keydown.esc="editing = false"
           @blur="saveRename"
@@ -90,19 +101,23 @@ function addTask() {
       </template>
       <template v-else>
         <div class="flex items-center justify-between gap-2">
-          <h2 class="flex min-w-0 items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-widest text-steel">
-            <SvgIcon v-if="stage.is_done" name="check" :size="11" class="text-signal" />
-            <SvgIcon v-else-if="stage.is_backlog" name="lines" :size="11" />
+          <h2 class="flex min-w-0 items-center gap-2 font-sans text-[15px] font-semibold tracking-tight text-ink">
+            <SvgIcon v-if="stage.is_done" name="check" :size="13" class="text-[var(--stage)]" />
+            <span v-else class="h-1.5 w-1.5 shrink-0 bg-[var(--stage)]" />
             <span class="truncate">{{ stageName(stage) }}</span>
           </h2>
           <div class="flex shrink-0 items-center gap-1.5">
-            <span v-if="stage.wip_limit != null" class="font-mono text-[11px]" :class="wipFull ? 'text-[#C92A2A]' : 'text-steel'">
+            <span
+              v-if="stage.wip_limit != null"
+              class="font-mono text-[11px] font-medium tabular-nums"
+              :class="wipFull ? 'text-[#C92A2A]' : 'text-[var(--stage)]'"
+            >
               {{ tasks.length }}/{{ stage.wip_limit }}
             </span>
-            <span v-else class="font-mono text-[11px] text-steel">{{ String(total).padStart(2, '0') }}</span>
+            <span v-else class="font-mono text-[11px] font-medium tabular-nums text-[var(--stage)]">{{ String(total).padStart(2, '0') }}</span>
           </div>
         </div>
-        <div v-if="canManage && !stage.is_done" class="mt-1.5 flex items-center gap-2">
+        <div v-if="canManage && !stage.is_done" class="mt-2 flex items-center gap-2.5">
           <button class="font-mono text-[9px] uppercase tracking-widest text-steel hover:text-ink" :title="t('stage.rename')" @click="beginRename">
             <SvgIcon name="pencil" :size="11" />
           </button>
@@ -129,7 +144,7 @@ function addTask() {
       </template>
 
       <!-- WIP limit editor -->
-      <div v-if="wipOpen" class="mt-1.5 flex items-center gap-1.5 border-t border-line pt-1.5">
+      <div v-if="wipOpen" class="mt-2 flex items-center gap-1.5 border-t border-line pt-2">
         <span class="font-mono text-[9px] uppercase tracking-widest text-steel">WIP</span>
         <input
           :ref="(el) => (wipInput = el)"
@@ -147,12 +162,13 @@ function addTask() {
           {{ t('stage.clear') }}
         </button>
       </div>
+      </div>
     </header>
 
     <!-- split stage: active / done sub-stages -->
     <template v-if="stage.is_split">
-      <div class="flex items-center justify-between px-3 pt-2">
-        <span class="font-mono text-[9px] font-bold uppercase tracking-widest text-steel">{{ t('stage.active') }}</span>
+      <div class="flex items-center justify-between px-3 pt-2.5">
+        <span class="font-sans text-[11px] font-semibold tracking-tight text-[var(--stage)]">{{ t('stage.active') }}</span>
         <span v-if="stage.wip_limit != null" class="font-mono text-[9px]" :class="wipFull ? 'text-[#C92A2A]' : 'text-steel'">
           {{ tasks.length }}/{{ stage.wip_limit }}
         </span>
@@ -163,19 +179,25 @@ function addTask() {
         item-key="id"
         :animation="150"
         ghost-class="drag-ghost"
+        handle=".card-grip"
         class="min-h-[40px] flex-1 space-y-2 overflow-y-auto p-2"
         @change="(evt) => onChange(evt, false)"
       >
         <template #item="{ element }">
-          <TaskCard :task="element" @open="$emit('open-task', element)" @complete="$emit('complete', element)" />
+          <TaskCard
+            :task="element"
+            @open="$emit('open-task', element)"
+            @complete="$emit('complete', element)"
+            @update="(patch) => $emit('update-task', element, patch)"
+          />
         </template>
       </draggable>
 
       <div class="flex items-center justify-between border-t border-line px-3 py-2">
-        <span class="flex items-center gap-1 font-mono text-[9px] font-bold uppercase tracking-widest text-steel">
-          <SvgIcon name="check" :size="10" class="text-signal" /> {{ t('stage.done') }}
+        <span class="flex items-center gap-1.5 font-sans text-[11px] font-semibold tracking-tight text-[#3E6B52]">
+          <SvgIcon name="check" :size="11" /> {{ t('stage.done') }}
         </span>
-        <span class="font-mono text-[9px] text-steel">{{ String(doneTasks.length).padStart(2, '0') }}</span>
+        <span class="font-mono text-[10px] font-medium tabular-nums text-[#3E6B52]">{{ String(doneTasks.length).padStart(2, '0') }}</span>
       </div>
       <draggable
         :list="doneTasks"
@@ -183,11 +205,17 @@ function addTask() {
         item-key="id"
         :animation="150"
         ghost-class="drag-ghost"
+        handle=".card-grip"
         class="max-h-56 min-h-[40px] space-y-2 overflow-y-auto p-2"
         @change="(evt) => onChange(evt, true)"
       >
         <template #item="{ element }">
-          <TaskCard :task="element" @open="$emit('open-task', element)" @complete="$emit('complete', element)" />
+          <TaskCard
+            :task="element"
+            @open="$emit('open-task', element)"
+            @complete="$emit('complete', element)"
+            @update="(patch) => $emit('update-task', element, patch)"
+          />
         </template>
       </draggable>
     </template>
@@ -200,22 +228,22 @@ function addTask() {
       item-key="id"
       :animation="150"
       ghost-class="drag-ghost"
+      handle=".card-grip"
       class="min-h-[60px] flex-1 space-y-2 overflow-y-auto p-2"
       @change="(evt) => onChange(evt, false)"
     >
       <template #item="{ element }">
-        <TaskCard :task="element" @open="$emit('open-task', element)" @complete="$emit('complete', element)" />
+        <TaskCard
+          :task="element"
+          @open="$emit('open-task', element)"
+          @complete="$emit('complete', element)"
+          @update="(patch) => $emit('update-task', element, patch)"
+        />
       </template>
     </draggable>
 
-    <footer v-if="!stage.is_done" class="border-t border-line p-2">
-      <input
-        v-model="newTitle"
-        :placeholder="t('stage.addTask')"
-        maxlength="500"
-        class="w-full bg-transparent font-mono text-[11px] uppercase tracking-wide text-ink outline-none placeholder:text-steel/70 focus:text-ink"
-        @keydown.enter="addTask"
-      />
+    <footer v-if="stage.is_backlog" class="border-t border-line p-2">
+      <TaskCard composing @create="addTask" />
     </footer>
   </section>
 </template>

@@ -117,8 +117,25 @@ def stage_by_name(board):
 @pytest.fixture
 def create_task(client):
     def _create(project_id: str, headers: dict, title: str, **payload) -> dict:
-        response = client.post(f"/api/projects/{project_id}/tasks", json={"title": title, **payload}, headers=headers)
+        # Creation is Backlog-only. A requested stage is reached with a move,
+        # which is how the board itself places work.
+        stage_id = payload.pop("stage_id", None)
+        stage_done = bool(payload.pop("stage_done", False))
+        response = client.post(
+            f"/api/projects/{project_id}/tasks",
+            json={"title": title, **payload},
+            headers=headers,
+        )
         assert response.status_code == 201, response.text
-        return response.json()
+        task = response.json()
+        if stage_id is not None and (str(stage_id) != str(task["stage_id"]) or stage_done):
+            moved = client.post(
+                f"/api/tasks/{task['id']}/move",
+                json={"stage_id": stage_id, "index": 10**9, "stage_done": stage_done},
+                headers=headers,
+            )
+            assert moved.status_code == 200, moved.text
+            task = next(t for t in moved.json()["tasks"] if t["id"] == task["id"])
+        return task
 
     return _create
