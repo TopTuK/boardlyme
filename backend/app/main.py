@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.reminders import run_reminder_loop
 from app.routers import auth, members, meta, projects, stages, tasks, ws
+from app.telegram_bot import close_bot
 
 
 @asynccontextmanager
@@ -21,6 +22,7 @@ async def lifespan(_: FastAPI):
     reminder_task.cancel()
     with suppress(asyncio.CancelledError):
         await reminder_task
+    await close_bot()
 
 
 app = FastAPI(title="Boardly API", version="0.1.0", lifespan=lifespan)
