@@ -28,14 +28,13 @@ def test_ws_ping_pong(client, make_project):
         assert ws.receive_json() == {"type": "pong"}
 
 
-def test_ws_broadcasts_task_events(client, make_project, stage_by_name):
+def test_ws_broadcasts_task_events(client, make_project):
     project, headers, tokens = make_project()
-    active = stage_by_name(project["id"], headers, "Active")
 
     with client.websocket_connect(_ws_url(project["id"], tokens["access_token"])) as ws:
         task = client.post(
             f"/api/projects/{project['id']}/tasks",
-            json={"title": "live", "stage_id": active["id"]},
+            json={"title": "live"},
             headers=headers,
         ).json()
 

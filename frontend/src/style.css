@@ -28,6 +28,27 @@ body {
   background-size: 28px 28px;
 }
 
+/* Stage column: a pale wash of its station color, stronger under the title */
+.stage {
+  background: color-mix(in srgb, var(--stage) 7%, #f7f6f1);
+}
+
+.stage-head {
+  background: color-mix(in srgb, var(--stage) 14%, #f7f6f1);
+}
+
+/* Blank work order: warm plate, not a finished white card */
+.task-compose {
+  background-color: #f3ece3;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 7px,
+    rgba(22, 22, 22, 0.035) 7px,
+    rgba(22, 22, 22, 0.035) 8px
+  );
+}
+
 /* vuedraggable ghost card */
 .drag-ghost {
   opacity: 0.35;

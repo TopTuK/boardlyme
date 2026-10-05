@@ -102,8 +102,21 @@ def main():
     check("reopen clears completed_at", t2_now["completed_at"] is None)
 
     # --- WIP limits ---
+    r = c.post(
+        f"/api/projects/{pid}/tasks",
+        json={"title": "Not in backlog", "stage_id": todo["id"]},
+        headers=auth_header(alice["access_token"]),
+    )
+    check("new tasks only in backlog", r.status_code == 400)
+
     c.patch(f"/api/stages/{todo['id']}", json={"wip_limit": 1}, headers=auth_header(alice["access_token"]))
-    r = c.post(f"/api/projects/{pid}/tasks", json={"title": "Over limit", "stage_id": todo["id"]}, headers=auth_header(alice["access_token"]))
+    r = c.post(f"/api/projects/{pid}/tasks", json={"title": "Over limit"}, headers=auth_header(alice["access_token"]))
+    overflow = r.json()
+    r = c.post(
+        f"/api/tasks/{overflow['id']}/move",
+        json={"stage_id": todo["id"], "index": 0},
+        headers=auth_header(alice["access_token"]),
+    )
     check("WIP limit blocks overflow", r.status_code == 409)
     c.patch(f"/api/stages/{todo['id']}", json={"wip_limit": None}, headers=auth_header(alice["access_token"]))
 
