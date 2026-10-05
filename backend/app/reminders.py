@@ -17,17 +17,18 @@ import logging
 from datetime import date, datetime, time
 from zoneinfo import ZoneInfo
 
-import httpx
+from aiogram.exceptions import TelegramAPIError
+from aiogram.types import LinkPreviewOptions
 from sqlalchemy import select
 
 from app.config import settings
 from app.database import SessionLocal
 from app.models import Project, ProjectMember, ReminderRun, Stage, Task, User
+from app.telegram_bot import get_bot
 
 logger = logging.getLogger("boardly.reminders")
 
 DIGEST_KIND = "daily"
-TELEGRAM_API_BASE = "https://api.telegram.org"
 MONTHS = {
     "en": ("JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"),
     "ru": ("ЯНВ", "ФЕВ", "МАР", "АПР", "МАЙ", "ИЮН", "ИЮЛ", "АВГ", "СЕН", "ОКТ", "НОЯ", "ДЕК"),
@@ -138,25 +139,17 @@ def render_digest(active, deadlines, today: date, locale: str = "en") -> str | N
 # --------------------------------------------------------------------------- #
 
 
-async def send_telegram_message(bot_token: str, chat_id: int, text: str) -> bool:
-    url = f"{TELEGRAM_API_BASE}/bot{bot_token}/sendMessage"
-    try:
-        async with httpx.AsyncClient(timeout=15) as client:
-            response = await client.post(
-                url,
-                json={
-                    "chat_id": chat_id,
-                    "text": text,
-                    "parse_mode": "HTML",
-                    "disable_web_page_preview": True,
-                },
-            )
-    except httpx.HTTPError:
-        logger.warning("Telegram request for chat %s failed", chat_id, exc_info=True)
+async def send_telegram_message(chat_id: int, text: str) -> bool:
+    bot = get_bot()
+    if bot is None:
+        logger.warning("Telegram message to chat %s skipped: BOT_TOKEN is not configured", chat_id)
         return False
-    if response.status_code != 200:
-        # 403 = user never started the bot / blocked it; 400 = malformed payload
-        logger.warning("Telegram sendMessage to %s failed: %s", chat_id, response.text[:200])
+    try:
+        await bot.send_message(chat_id, text, link_preview_options=LinkPreviewOptions(is_disabled=True))
+    except TelegramAPIError:
+        # Covers 403 (user never started the bot / blocked it), 400 (malformed
+        # payload), 429 (flood limits) and network failures.
+        logger.warning("Telegram sendMessage to chat %s failed", chat_id, exc_info=True)
         return False
     return True
 
@@ -214,7 +207,7 @@ async def process_daily(db, now: datetime) -> int:
             rows = await _visible_task_rows(db, user.id)
             active, deadlines = classify(rows, user.id, today, settings.reminders_deadline_days)
             text = render_digest(active, deadlines, today, locale=user.locale)
-            delivered = text is None or await send_telegram_message(settings.bot_token, user.telegram_id, text)
+            delivered = text is None or await send_telegram_message(user.telegram_id, text)
             if delivered:
                 db.add(ReminderRun(kind=DIGEST_KIND, user_id=user.id, run_date=today))
                 await db.commit()

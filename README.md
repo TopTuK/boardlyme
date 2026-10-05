@@ -8,7 +8,7 @@ a hidden Done stage, and live-shared boards where collaborators assign tasks to 
 Minimalist industrial UI, no passwords: your Telegram identity is the account.
 
 ```
-Vue 3 (Vite, Pinia, Tailwind, vuedraggable)  ·  FastAPI (SQLAlchemy 2 async)  ·  PostgreSQL 16  ·  Docker
+Vue 3 (Vite, Pinia, Tailwind, vuedraggable)  ·  FastAPI (SQLAlchemy 2 async, aiogram)  ·  PostgreSQL 16  ·  Docker
 ```
 
 ## Screenshots
@@ -268,7 +268,7 @@ Mini App        user opens the app from the bot (needs artifact 3)
                 → webview loads your site → window.Telegram.WebApp.initData
                 → POST /api/auth/telegram/miniapp → verified against BOT_TOKEN → JWT
 
-Reminders       scheduler (backend) → sendMessage via BOT_TOKEN → user's Telegram chat
+Reminders       scheduler (backend) → aiogram sendMessage via BOT_TOKEN → user's Telegram chat
                 (only users who have interacted with the bot at least once)
 ```
 
@@ -412,6 +412,7 @@ boardly/
     │   ├── routers/             # auth, projects, stages, tasks, members, ws
     │   ├── models.py            # users, projects, stages, tasks, project_members, reminder_runs
     │   ├── telegram.py          # Telegram signature verification (widget + initData)
+    │   ├── telegram_bot.py      # shared aiogram Bot client (outgoing messages)
     │   ├── security.py          # JWT issue/verify
     │   ├── reminders.py         # daily digest scheduler + Telegram sendMessage
     │   ├── ws.py                # per-project WebSocket rooms

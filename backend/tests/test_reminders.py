@@ -125,8 +125,8 @@ def reminder_env(monkeypatch):
     monkeypatch.setattr(settings, "reminders_deadline_days", 2)
     sent = []
 
-    async def fake_send(bot_token, chat_id, text):
-        sent.append((bot_token, chat_id, text))
+    async def fake_send(chat_id, text):
+        sent.append((chat_id, text))
         return True
 
     monkeypatch.setattr(reminders, "send_telegram_message", fake_send)
@@ -164,8 +164,7 @@ def test_digest_sent_once_per_day(client, make_project, create_task, sessionmake
     sent_count = _run_daily(sessionmaker, datetime(2026, 10, 5, 10, 0))
     assert sent_count == 1
     assert len(reminder_env) == 1
-    bot_token, chat_id, text = reminder_env[0]
-    assert bot_token == "123:test-token"
+    chat_id, text = reminder_env[0]
     assert chat_id == 555001
     assert "In progress" in text
     assert "Overdue one" in text
@@ -179,7 +178,7 @@ def test_digest_sent_once_per_day(client, make_project, create_task, sessionmake
     # next day: sent again, and the backlog deadline is now "due today"
     assert _run_daily(sessionmaker, datetime(2026, 10, 6, 10, 0)) == 1
     assert len(reminder_env) == 2
-    assert "Backlog with deadline [Test Project] — due today" in reminder_env[1][2]
+    assert "Backlog with deadline [Test Project] — due today" in reminder_env[1][1]
 
 
 def test_no_message_before_daily_time(client, make_project, create_task, sessionmaker, reminder_env, stage_by_name):
@@ -224,7 +223,7 @@ def test_delivery_failure_is_retried_and_not_logged(
 
     calls = []
 
-    async def failing_send(bot_token, chat_id, text):
+    async def failing_send(chat_id, text):
         calls.append(chat_id)
         return False
 
