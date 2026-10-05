@@ -207,7 +207,7 @@ function addTask(payload) {
         </span>
         <span class="font-mono text-[10px] font-medium tabular-nums text-[#3E6B52]">{{ String(doneTasks.length).padStart(2, '0') }}</span>
       </div>
-      <div class="relative max-h-56 min-h-[40px]">
+      <div class="relative flex min-h-0 max-h-56 flex-col">
         <p
           v-if="!doneTasks.length"
           class="pointer-events-none absolute inset-x-0 top-0 px-3 pt-3 text-center text-[13px] text-steel"
@@ -221,7 +221,7 @@ function addTask(payload) {
           :animation="150"
           ghost-class="drag-ghost"
           handle=".card-grip"
-          class="relative max-h-56 min-h-[40px] space-y-2 overflow-y-auto p-2"
+          class="relative h-full min-h-0 flex-1 space-y-2 overflow-y-auto p-2"
           @change="(evt) => onChange(evt, true)"
         >
         <template #item="{ element }">

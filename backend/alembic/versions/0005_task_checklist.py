@@ -27,7 +27,7 @@ def upgrade() -> None:
         sa.Column("content", sa.String(length=500), nullable=False),
         sa.Column("position", sa.Integer(), nullable=False),
         sa.Column("is_done", sa.Boolean(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
+        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
     )
     op.create_index("ix_checklist_items_task_id", "checklist_items", ["task_id"])
 

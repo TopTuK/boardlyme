@@ -175,7 +175,7 @@ function assignMe() {
               >{{ item.content }}</span>
               <button
                 type="button"
-                class="flex h-5 w-5 shrink-0 items-center justify-center text-steel opacity-0 transition-opacity hover:text-[#C92A2A] group-hover/item:opacity-100"
+                class="flex h-5 w-5 shrink-0 items-center justify-center text-steel opacity-100 transition-opacity hover:text-[#C92A2A] focus-visible:opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/item:opacity-100 [@media(hover:hover)]:focus-visible:opacity-100"
                 :title="t('common.delete')"
                 @click="removeItem(item)"
               >
