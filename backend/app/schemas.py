@@ -159,6 +159,28 @@ class TaskMoveIn(BaseModel):
     stage_done: bool = False
 
 
+class ChecklistItemCreate(BaseModel):
+    content: str = Field(min_length=1, max_length=500)
+
+    _strip_content = field_validator("content", mode="after")(_required_text)
+
+
+class ChecklistItemUpdate(BaseModel):
+    content: str | None = Field(default=None, min_length=1, max_length=500)
+    is_done: bool | None = None
+
+    _strip_content = field_validator("content", mode="after")(_required_text)
+
+
+class ChecklistItemOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    content: str
+    position: int
+    is_done: bool
+
+
 class TaskOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -175,6 +197,7 @@ class TaskOut(BaseModel):
     created_at: datetime
     updated_at: datetime
     assignee: UserOut | None = None
+    checklist: list[ChecklistItemOut] = []
 
 
 class TaskBrief(BaseModel):

@@ -25,6 +25,14 @@ const stageDone = computed(() => !!props.task?.stage_done && !done.value)
 const dlState = computed(() => (props.task ? deadlineState(props.task.deadline) : null))
 const assigneeInitials = computed(() => (props.task?.assignee ? initials(props.task.assignee) : ''))
 const assigneeTitle = computed(() => (props.task?.assignee ? displayName(props.task.assignee) : ''))
+const checklist = computed(() => props.task?.checklist || [])
+const checklistDone = computed(() => checklist.value.filter((i) => i.is_done).length)
+const checklistAllDone = computed(
+  () => checklist.value.length > 0 && checklistDone.value === checklist.value.length
+)
+const hasMeta = computed(() =>
+  props.composing || !props.task ? false : !!(props.task.deadline || props.task.assignee || checklist.value.length)
+)
 
 watch(
   () => [props.task?.title, props.task?.description],
@@ -163,7 +171,7 @@ function finish() {
 
     <div
       class="flex items-center gap-2 px-2.5"
-      :class="composing || !(task && (task.deadline || task.assignee)) ? 'pb-2' : 'pb-0.5'"
+      :class="composing || !hasMeta ? 'pb-2' : 'pb-0.5'"
     >
       <textarea
         ref="descEl"
@@ -191,10 +199,19 @@ function finish() {
     </div>
 
     <div
-      v-if="!composing && (task.deadline || task.assignee)"
+      v-if="!composing && hasMeta"
       class="card-grip flex h-7 cursor-grab items-center gap-2 px-2.5 active:cursor-grabbing"
       @click="$emit('open')"
     >
+      <span
+        v-if="checklist.length"
+        class="flex items-center gap-1 font-mono text-[10px] font-medium uppercase tabular-nums"
+        :class="checklistAllDone ? 'text-signal' : 'text-steel'"
+        :title="t('task.checklist')"
+      >
+        <SvgIcon name="square" :size="9" :class="checklistAllDone ? 'text-signal' : 'text-steel'" />
+        {{ checklistDone }}/{{ checklist.length }}
+      </span>
       <span
         v-if="task.deadline"
         class="flex items-center gap-1 font-mono text-[10px] uppercase"

@@ -88,6 +88,22 @@ class Task(Base):
     )
 
     assignee: Mapped["User | None"] = relationship(foreign_keys=[assignee_id])
+    checklist: Mapped[list["ChecklistItem"]] = relationship(
+        order_by="ChecklistItem.position", cascade="all, delete-orphan", passive_deletes=True
+    )
+
+
+class ChecklistItem(Base):
+    __tablename__ = "checklist_items"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    task_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    content: Mapped[str] = mapped_column(String(500), nullable=False)
+    position: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    is_done: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class ProjectMember(Base):

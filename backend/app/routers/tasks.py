@@ -7,8 +7,17 @@ from sqlalchemy.orm import selectinload
 
 from app.deps import DbDep
 from app.deps import UserDep, get_project_with_role
-from app.models import ProjectMember, Stage, Task
-from app.schemas import ReorderOut, TaskBrief, TaskCreate, TaskMoveIn, TaskOut, TaskUpdate
+from app.models import ChecklistItem, ProjectMember, Stage, Task
+from app.schemas import (
+    ChecklistItemCreate,
+    ChecklistItemUpdate,
+    ReorderOut,
+    TaskBrief,
+    TaskCreate,
+    TaskMoveIn,
+    TaskOut,
+    TaskUpdate,
+)
 from app.ws import manager
 
 router = APIRouter(prefix="/api", tags=["tasks"])
@@ -16,7 +25,11 @@ router = APIRouter(prefix="/api", tags=["tasks"])
 
 async def _serialize_task(db, task_id: uuid.UUID) -> TaskOut:
     task = (
-        await db.execute(select(Task).where(Task.id == task_id).options(selectinload(Task.assignee)))
+        await db.execute(
+            select(Task)
+            .where(Task.id == task_id)
+            .options(selectinload(Task.assignee), selectinload(Task.checklist))
+        )
     ).scalar_one()
     return TaskOut.model_validate(task)
 
@@ -81,13 +94,63 @@ async def _check_wip(db, stage: Stage) -> None:
         )
 
 
+async def _unchecked_count(db, task_id: uuid.UUID) -> int:
+    return (
+        await db.execute(
+            select(func.count(ChecklistItem.id)).where(
+                ChecklistItem.task_id == task_id, ChecklistItem.is_done.is_(False)
+            )
+        )
+    ).scalar_one()
+
+
+async def _assert_checklist_done(db, task: Task) -> None:
+    """A task with unchecked checklist items cannot be closed (409)."""
+    if await _unchecked_count(db, task.id):
+        raise HTTPException(status_code=409, detail="Task has unchecked checklist items")
+
+
+async def _first_work_stage(db, project_id: uuid.UUID) -> Stage | None:
+    return (
+        (
+            await db.execute(
+                select(Stage)
+                .where(Stage.project_id == project_id, Stage.is_done.is_(False))
+                .order_by(Stage.position)
+            )
+        )
+        .scalars()
+        .first()
+    )
+
+
+async def _reopen_if_broken(db, task: Task) -> list[Task]:
+    """Closed tasks must keep a fully checked checklist.
+
+    Any change that would leave an unchecked item on a completed task (adding
+    an item, unchecking one) pulls the task back to the first work stage.
+    Returns the tasks affected by the move (empty when no reopen happened).
+    """
+    if task.completed_at is None or not await _unchecked_count(db, task.id):
+        return []
+    work_stage = await _first_work_stage(db, task.project_id)
+    if work_stage is None:
+        return []
+    return await _apply_move(db, task, work_stage, 10**9)  # append at the end
+
+
 async def _apply_move(db, task: Task, target_stage: Stage, index: int, target_lane: bool = False) -> list[Task]:
     """Move `task` into a (stage, sub-stage) lane at `index`, resequencing positions.
 
     Returns every task whose stage/lane/position changed (including the moved one).
-    Raises 409 when the move would exceed the target stage's WIP limit.
+    Raises 409 when the move would exceed the target stage's WIP limit or when
+    a task with unchecked checklist items is moved into the Done stage.
     """
     same_lane = task.stage_id == target_stage.id and bool(task.stage_done) == bool(target_lane)
+
+    # Closing a task requires its whole checklist to be checked.
+    if target_stage.is_done:
+        await _assert_checklist_done(db, task)
 
     # WIP limits guard the active lane only; the done sub-lane is never limited.
     if not same_lane and not target_lane:
@@ -231,6 +294,85 @@ async def complete_task(task_id: uuid.UUID, user: UserDep, db: DbDep):
     briefs = [_brief(t) for t in affected]
     await manager.broadcast(task.project_id, {"type": "tasks.reordered", "tasks": briefs})
     return ReorderOut(tasks=briefs)
+
+
+# --------------------------------------------------------------------------- #
+# Checklist
+# --------------------------------------------------------------------------- #
+
+
+async def _task_for_checklist_edit(db, task_id: uuid.UUID, user) -> Task:
+    task = await db.get(Task, task_id)
+    if task is None:
+        raise HTTPException(status_code=404, detail="Task not found")
+    await get_project_with_role(db, user, task.project_id)
+    return task
+
+
+async def _broadcast_task(db, task: Task, affected: list[Task]) -> TaskOut:
+    """Serialize and broadcast a checklist change (plus any reopen reordering)."""
+    task_out = await _serialize_task(db, task.id)
+    if affected:
+        briefs = [_brief(t) for t in affected]
+        await manager.broadcast(task.project_id, {"type": "tasks.reordered", "tasks": briefs})
+    await manager.broadcast(task.project_id, {"type": "task.updated", "task": task_out.model_dump(mode="json")})
+    return task_out
+
+
+@router.post("/tasks/{task_id}/checklist", response_model=TaskOut, status_code=status.HTTP_201_CREATED)
+async def add_checklist_item(
+    task_id: uuid.UUID, body: ChecklistItemCreate, user: UserDep, db: DbDep
+):
+    task = await _task_for_checklist_edit(db, task_id, user)
+
+    position = (
+        await db.execute(
+            select(func.coalesce(func.max(ChecklistItem.position), -1)).where(
+                ChecklistItem.task_id == task_id
+            )
+        )
+    ).scalar_one()
+    db.add(ChecklistItem(task_id=task_id, content=body.content, position=position + 1))
+
+    # A fresh unchecked item on a closed task reopens it.
+    affected = await _reopen_if_broken(db, task)
+    await db.commit()
+
+    return await _broadcast_task(db, task, affected)
+
+
+@router.patch("/checklist/items/{item_id}", response_model=TaskOut)
+async def update_checklist_item(
+    item_id: uuid.UUID, body: ChecklistItemUpdate, user: UserDep, db: DbDep
+):
+    item = await db.get(ChecklistItem, item_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="Checklist item not found")
+    task = await _task_for_checklist_edit(db, item.task_id, user)
+
+    fields = body.model_fields_set
+    if "content" in fields and body.content is not None:
+        item.content = body.content
+    if "is_done" in fields and body.is_done is not None:
+        item.is_done = body.is_done
+
+    # Unchecking an item on a closed task reopens it.
+    affected = await _reopen_if_broken(db, task)
+    await db.commit()
+
+    return await _broadcast_task(db, task, affected)
+
+
+@router.delete("/checklist/items/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_checklist_item(item_id: uuid.UUID, user: UserDep, db: DbDep):
+    item = await db.get(ChecklistItem, item_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="Checklist item not found")
+    task = await _task_for_checklist_edit(db, item.task_id, user)
+
+    await db.delete(item)
+    await db.commit()
+    await _broadcast_task(db, task, [])
 
 
 @router.delete("/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT)

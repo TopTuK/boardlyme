@@ -30,6 +30,27 @@ const form = reactive({
 })
 const saving = ref(false)
 const confirmDelete = ref(false)
+const newItem = ref('')
+
+const checklist = computed(() => props.task.checklist || [])
+const checklistDone = computed(() => checklist.value.filter((i) => i.is_done).length)
+const checklistOpen = computed(
+  () => checklist.value.length > 0 && checklistDone.value === checklist.value.length
+)
+
+async function addItem() {
+  const content = newItem.value.trim()
+  if (!content) return
+  if (await board.addChecklistItem(props.task.id, content)) newItem.value = ''
+}
+
+function toggleItem(item) {
+  board.updateChecklistItem(props.task.id, item.id, { is_done: !item.is_done })
+}
+
+function removeItem(item) {
+  board.removeChecklistItem(props.task.id, item.id)
+}
 
 function onKeydown(e) {
   if (e.key === 'Escape') emit('close')
@@ -121,6 +142,57 @@ function assignMe() {
           ></textarea>
         </label>
 
+        <div>
+          <div class="mb-1 flex items-center justify-between">
+            <span class="font-mono text-[10px] uppercase tracking-widest text-steel">{{ t('task.checklist') }}</span>
+            <span
+              v-if="checklist.length"
+              class="font-mono text-[10px] font-bold uppercase tabular-nums"
+              :class="checklistOpen ? 'text-signal' : 'text-steel'"
+            >
+              {{ checklistDone }}/{{ checklist.length }}
+            </span>
+          </div>
+
+          <ul v-if="checklist.length" class="border border-line bg-white">
+            <li
+              v-for="item in checklist"
+              :key="item.id"
+              class="group/item flex items-center gap-2.5 border-b border-line px-2.5 py-1.5 last:border-b-0"
+            >
+              <button
+                type="button"
+                class="flex h-4 w-4 shrink-0 items-center justify-center border-2 transition-colors"
+                :class="item.is_done ? 'border-ink bg-ink text-paper' : 'border-ink/40 bg-white hover:border-signal'"
+                :title="item.is_done ? t('task.uncheckItem') : t('task.checkItem')"
+                @click="toggleItem(item)"
+              >
+                <SvgIcon v-if="item.is_done" name="check" :size="9" />
+              </button>
+              <span
+                class="min-w-0 flex-1 break-words text-[13px] leading-5"
+                :class="item.is_done ? 'text-steel line-through decoration-1' : 'text-ink'"
+              >{{ item.content }}</span>
+              <button
+                type="button"
+                class="flex h-5 w-5 shrink-0 items-center justify-center text-steel opacity-100 transition-opacity hover:text-[#C92A2A] focus-visible:opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/item:opacity-100 [@media(hover:hover)]:focus-visible:opacity-100"
+                :title="t('common.delete')"
+                @click="removeItem(item)"
+              >
+                <SvgIcon name="trash" :size="11" />
+              </button>
+            </li>
+          </ul>
+
+          <input
+            v-model="newItem"
+            maxlength="500"
+            :placeholder="t('task.addChecklistItem')"
+            class="mt-1 w-full border border-dashed border-ink/25 bg-white px-3 py-1.5 text-[13px] outline-none placeholder:text-steel/50 focus:border-solid focus:border-ink"
+            @keydown.enter.prevent="addItem"
+          />
+        </div>
+
         <div class="grid gap-4 sm:grid-cols-2">
           <label class="block">
             <span class="mb-1 block font-mono text-[10px] uppercase tracking-widest text-steel">{{ t('task.deadline') }}</span>
@@ -178,7 +250,14 @@ function assignMe() {
             <SvgIcon name="check" :size="11" /> {{ t('task.stageDone') }}
           </Btn>
           <Btn v-if="inStageDone && !done" variant="ghost" @click="backToStageActive">{{ t('task.backActive') }}</Btn>
-          <Btn v-if="!done" @click="complete"><SvgIcon name="check" :size="11" /> {{ t('task.complete') }}</Btn>
+          <Btn
+            v-if="!done"
+            :disabled="checklist.length > 0 && !checklistOpen"
+            :title="checklist.length > 0 && !checklistOpen ? t('task.checklistBlockedTitle') : t('task.completeTitle')"
+            @click="complete"
+          >
+            <SvgIcon name="check" :size="11" /> {{ t('task.complete') }}
+          </Btn>
           <Btn v-else variant="ghost" @click="reopen">{{ t('task.reopen') }}</Btn>
           <Btn variant="ghost" @click="emit('close')">{{ t('common.cancel') }}</Btn>
           <Btn :disabled="saving || !form.title.trim()" @click="save">{{ t('common.save') }}</Btn>

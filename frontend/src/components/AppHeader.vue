@@ -16,7 +16,7 @@ function logout() {
 
 <template>
   <header class="border-b-2 border-ink bg-paper">
-    <div class="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
+    <div class="flex h-14 items-center justify-between px-3">
       <RouterLink to="/boards" class="flex items-center gap-2">
         <img src="/icon.png" alt="" width="28" height="28" class="h-7 w-7" />
         <span class="text-sm font-black tracking-tight">BOARDLY</span>

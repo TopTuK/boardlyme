@@ -15,7 +15,7 @@ from starlette.testclient import TestClient
 
 from app.config import settings
 from app.database import get_db
-from app.models import Base, Project, ProjectMember, Stage, Task, User
+from app.models import Base, ChecklistItem, Project, ProjectMember, Stage, Task, User
 
 
 async def _create_all(engine) -> None:
@@ -30,7 +30,7 @@ async def _dispose(engine) -> None:
 
 async def _truncate(sessionmaker) -> None:
     async with sessionmaker() as db:
-        for model in (Task, Stage, ProjectMember, Project, User):
+        for model in (ChecklistItem, Task, Stage, ProjectMember, Project, User):
             await db.execute(delete(model))
         await db.commit()
 
