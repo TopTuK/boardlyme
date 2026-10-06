@@ -1,3 +1,6 @@
+# Local stack. Publishes the site on APP_PORT.
+# On the shared VPS use docker-compose.production.yml instead.
+
 name: boardly
 
 services:
