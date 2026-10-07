@@ -1,0 +1,84 @@
+# Production stack on the shared VPS. GitHub Actions
+# (.github/workflows/deploy-production.yml) builds the images, copies this
+# file to ~/boardly, and runs it with --no-build.
+# TLS is the proxy in ~/proxy, which you start by hand. It reaches
+# boardly-frontend on the external network `edge`.
+
+name: boardly
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - boardly-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - boardly-internal
+
+  backend:
+    image: boardly-backend:latest
+    pull_policy: never
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET}
+      BOT_TOKEN: ${BOT_TOKEN:?set BOT_TOKEN}
+      BOT_USERNAME: ${BOT_USERNAME:?set BOT_USERNAME}
+      APP_URL: ${APP_URL:?set APP_URL}
+      DEV_FAKE_AUTH: "0"
+      REMINDERS_ENABLED: ${REMINDERS_ENABLED:-1}
+      REMINDERS_DAILY_TIME: ${REMINDERS_DAILY_TIME:-09:00}
+      REMINDERS_DEADLINE_DAYS: ${REMINDERS_DEADLINE_DAYS:-2}
+      REMINDERS_CHECK_INTERVAL_MIN: ${REMINDERS_CHECK_INTERVAL_MIN:-30}
+      REMINDERS_TIMEZONE: ${REMINDERS_TIMEZONE:-UTC}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    networks:
+      - boardly-internal
+
+  frontend:
+    image: boardly-frontend:latest
+    pull_policy: never
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    expose:
+      - "80"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      boardly-internal: {}
+      edge:
+        aliases:
+          - boardly-frontend
+
+volumes:
+  boardly-db:
+
+networks:
+  boardly-internal:
+    driver: bridge
+  edge:
+    external: true
+    name: edge
