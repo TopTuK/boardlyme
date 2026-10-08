@@ -23,6 +23,7 @@ const API_KEYS = {
   'At least one work stage is required': 'api.workStageRequired',
   'stage_ids must be a permutation of the project stages': 'api.stagePermutation',
   'The Backlog stage must stay first': 'api.backlogFirst',
+  'The Done stage must stay last': 'api.doneLast',
   'Stage not found': 'api.stageNotFound',
   'User not found': 'api.userNotFound',
   'Member not found': 'api.memberNotFound',

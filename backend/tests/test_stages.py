@@ -1,16 +1,36 @@
-DEFAULT_STAGE_NAMES = ["Backlog", "ToDo", "Active", "Done"]
-
-
-def test_create_stage_appends_at_end(client, make_project, board):
+def test_create_stage_inserts_before_done(client, make_project, board):
     project, headers, _ = make_project()
     response = client.post(f"/api/projects/{project['id']}/stages", json={"name": "Review"}, headers=headers)
     assert response.status_code == 201
     stage = response.json()
-    assert stage["position"] == 4
+    assert stage["position"] == 3
     assert stage["is_backlog"] is False and stage["is_done"] is False
 
-    names = [s["name"] for s in board(project["id"], headers)["stages"]]
-    assert names == DEFAULT_STAGE_NAMES + ["Review"]
+    stages = board(project["id"], headers)["stages"]
+    assert [s["name"] for s in stages] == ["Backlog", "ToDo", "Active", "Review", "Done"]
+    assert stages[-1]["is_done"] is True and stages[-1]["position"] == 4
+
+
+def test_create_stage_broadcasts_full_order(client, make_project, monkeypatch):
+    """The renumbering moves Done, so the event must carry every stage's
+    fresh position — clients with a stale Done would sort the new column
+    behind it."""
+    import app.routers.stages as stages_router
+
+    events = []
+
+    async def capture(project_id, payload):
+        events.append(payload)
+
+    monkeypatch.setattr(stages_router.manager, "broadcast", capture)
+    project, headers, _ = make_project()
+    response = client.post(f"/api/projects/{project['id']}/stages", json={"name": "Review"}, headers=headers)
+    assert response.status_code == 201
+
+    event = events[-1]
+    assert event["type"] == "stage.created"
+    assert [s["name"] for s in event["stages"]] == ["Backlog", "ToDo", "Active", "Review", "Done"]
+    assert [s["position"] for s in event["stages"]] == [0, 1, 2, 3, 4]
 
 
 def test_create_stage_with_wip_limit(client, make_project):
@@ -129,6 +149,30 @@ def test_reorder_rejects_non_permutation(client, make_project, board):
         headers=headers,
     )
     assert response.status_code == 400
+
+
+def test_reorder_stages_keeps_done_last(client, make_project, board, stage_by_name):
+    project, headers, _ = make_project()
+    backlog = stage_by_name(project["id"], headers, "Backlog")
+    todo = stage_by_name(project["id"], headers, "ToDo")
+    active = stage_by_name(project["id"], headers, "Active")
+    done = stage_by_name(project["id"], headers, "Done")
+
+    response = client.put(
+        f"/api/projects/{project['id']}/stages/reorder",
+        json={"stage_ids": [backlog["id"], done["id"], todo["id"], active["id"]]},
+        headers=headers,
+    )
+    assert response.status_code == 400
+
+    # regular stages can swap freely as long as Done stays last
+    response = client.put(
+        f"/api/projects/{project['id']}/stages/reorder",
+        json={"stage_ids": [backlog["id"], active["id"], todo["id"], done["id"]]},
+        headers=headers,
+    )
+    assert response.status_code == 200
+    assert [s["name"] for s in response.json()] == ["Backlog", "Active", "ToDo", "Done"]
 
 
 def test_split_regular_stage(client, make_project, stage_by_name):

@@ -8,8 +8,34 @@ env:
   FRONTEND_IMAGE: ghcr.io/toptuk/boardly-frontend
 
 jobs:
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    env:
+      JWT_SECRET: ci-secret
+      DEV_FAKE_AUTH: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        working-directory: backend
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        working-directory: backend
+        run: pytest -v
+
   build:
     name: Build and push images
+    needs: tests
     runs-on: ubuntu-latest
     permissions:
       contents: read

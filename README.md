@@ -39,7 +39,7 @@ Vue 3 (Vite, Pinia, Tailwind, vuedraggable)  ·  FastAPI (SQLAlchemy 2 async, ai
 | # | Capability | Details |
 |---|------------|---------|
 | 1 | **Projects** | One board per project, created in a click. |
-| 2 | **Stages** | New boards start with `Backlog` (predefined, always first, cannot be deleted), `ToDo` and `Active`; owners add, rename and delete further stages. Any regular stage can carry a **WIP limit** and can be **split into active/done sub-stages**. |
+| 2 | **Stages** | New boards start with `Backlog` (predefined, always first, cannot be deleted), `ToDo` and `Active`; owners add, rename, delete and reorder stages — `Backlog` is pinned first and `Done` is pinned last, any column in between can be dragged around. Any regular stage can carry a **WIP limit** and can be **split into active/done sub-stages**. |
 | 3 | **Tasks** | Title + description + optional deadline date. Drag & drop between stages and sub-stages. WIP limits are enforced server-side (409 on overflow). |
 | 4 | **Done, hidden** | Completing a task moves it to the `Done` stage, which is hidden by default — toggle **Show done** in the board header. |
 | 5 | **Share & assign** | Owners invite users by Telegram username; every member can assign tasks (to themselves or others). All changes sync live over WebSocket. |
@@ -430,8 +430,9 @@ behavior, and routes straight to the boards.
 - `users` — Telegram identity (`telegram_id`, username, names, photo). Dev users have negative ids.
 - `projects` — owned by a user; sharing happens through `project_members` (roles: `owner`, `editor`).
 - `stages` — ordered columns per project. `Backlog` is flagged `is_backlog` (undeletable,
-  always first); `Done` is flagged `is_done` and `is_hidden` by default. Regular stages may
-  carry a `wip_limit` and an `is_split` flag dividing them into active/done sub-stages.
+  always first); `Done` is flagged `is_done` (undeletable, always last) and `is_hidden` by
+  default. Regular stages may carry a `wip_limit` and an `is_split` flag dividing them into
+  active/done sub-stages.
 - `tasks` — title, description, optional deadline, optional assignee (must be a project
   member), position within the (stage, sub-stage) lane, `stage_done` flag, `completed_at`.
 - `reminder_runs` — dedup ledger for the daily digest: one row per (kind, user, day).

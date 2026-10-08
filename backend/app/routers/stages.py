@@ -41,9 +41,27 @@ async def create_stage(project_id: uuid.UUID, body: StageCreate, user: UserDep, 
     ).scalar_one() + 1
     stage = Stage(project_id=project_id, name=body.name.strip(), position=next_pos, wip_limit=body.wip_limit)
     db.add(stage)
+    await db.flush()
+    # Keep Done as the last column: the new stage slots in right before it.
+    ordered = sorted(
+        (await db.execute(select(Stage).where(Stage.project_id == project_id))).scalars().all(),
+        key=lambda s: (s.is_done, s.position),
+    )
+    for position, s in enumerate(ordered):
+        s.position = position
     await db.commit()
     await db.refresh(stage)
-    await manager.broadcast(project_id, {"type": "stage.created", "stage": _dump(stage)})
+    await manager.broadcast(
+        project_id,
+        {
+            "type": "stage.created",
+            "stage": _dump(stage),
+            # The renumbering above may have moved other stages (Done in
+            # particular) — send the full order so every client ends up on
+            # the same positions, like the reorder endpoint does.
+            "stages": [_dump(s) for s in ordered],
+        },
+    )
     return stage
 
 
@@ -131,6 +149,9 @@ async def reorder_stages(project_id: uuid.UUID, body: StageReorderIn, user: User
     backlog = next((s for s in stages if s.is_backlog), None)
     if backlog and body.stage_ids[0] != backlog.id:
         raise HTTPException(status_code=400, detail="The Backlog stage must stay first")
+    done = next((s for s in stages if s.is_done), None)
+    if done and body.stage_ids[-1] != done.id:
+        raise HTTPException(status_code=400, detail="The Done stage must stay last")
     for position, stage_id in enumerate(body.stage_ids):
         by_id[stage_id].position = position
     await db.commit()

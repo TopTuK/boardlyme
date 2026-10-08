@@ -108,8 +108,15 @@ export const useBoardStore = defineStore('board', {
           break
 
         case 'stage.created':
-          if (ev.stage && !this.stages.some((s) => s.id === ev.stage.id)) this.stages.push(ev.stage)
-          this.stages.sort((a, b) => a.position - b.position)
+          if (Array.isArray(ev.stages)) {
+            this.stages = ev.stages
+          } else if (ev.stage && !this.stages.some((s) => s.id === ev.stage.id)) {
+            // Fallback for the local add-stage path (no full list): insert
+            // right before Done — the server pins Done last, and its stale
+            // local position must not tie-break the new stage behind it.
+            const doneIdx = this.stages.findIndex((s) => s.is_done)
+            this.stages.splice(doneIdx === -1 ? this.stages.length : doneIdx, 0, ev.stage)
+          }
           this.rebuild()
           break
 
@@ -316,6 +323,28 @@ export const useBoardStore = defineStore('board', {
         return true
       } catch (e) {
         this._fail(e, 'errors.updateStage')
+        return false
+      }
+    },
+
+    /**
+     * Reorder columns. stageIds must be a permutation of every stage of the
+     * project (hidden included) — the API pins Backlog first and Done last.
+     */
+    async reorderStages(stageIds) {
+      if (!this.project) return false
+      const byId = new Map(this.stages.map((s) => [s.id, s]))
+      const next = stageIds.map((id) => byId.get(id)).filter(Boolean)
+      if (next.length !== this.stages.length) return false
+      const previous = this.stages
+      this.stages = next.map((s, i) => ({ ...s, position: i }))
+      try {
+        const { data } = await api.put(`/projects/${this.project.id}/stages/reorder`, { stage_ids: stageIds })
+        this.stages = data
+        return true
+      } catch (e) {
+        this.stages = previous
+        this._fail(e, 'errors.reorderStages')
         return false
       }
     },

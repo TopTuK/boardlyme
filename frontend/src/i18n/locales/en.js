@@ -27,6 +27,7 @@ export default {
   header: {
     exit: 'Exit',
     settings: 'Settings',
+    language: 'Language',
   },
   settings: {
     title: 'Settings',
@@ -43,7 +44,6 @@ export default {
       'A no-nonsense Kanban board for your personal workloads. Spin up projects, shape the stages, drag tasks to done. Runs on the web — and right inside Telegram.',
     loginTelegram: 'Log in with Telegram',
     openApp: 'Open the app →',
-    stack: 'Vue 3 · FastAPI · PostgreSQL · Telegram Mini App',
     fig: 'Fig. 1 — Board Assembly',
     figShop: 'Fig. 2 — Shop floor',
     figKit: 'Fig. 3 — Field kit',
@@ -61,7 +61,6 @@ export default {
     step3Title: 'Drag. Assign. Done.',
     step3Text: 'The full board in your pocket, synced live with the website.',
     copyright: 'Boardly © 2026',
-    footerStack: 'Vue · FastAPI · PostgreSQL · Docker',
     f1Title: 'Create projects',
     f1Text: 'Spin up a board per project in one click. Work, home, side hustle — each gets its own assembly line.',
     f2Title: 'Shape your stages',
@@ -78,7 +77,7 @@ export default {
     mock3: 'Renew passport',
     mock4: 'Refactor auth flow',
     mock5: 'Quarterly report',
-    mock6: 'Set up Docker',
+    mock6: 'Set up backups',
   },
   login: {
     access: 'Access Control',
@@ -125,6 +124,9 @@ export default {
   },
   stage: {
     rename: 'Rename stage',
+    dragTitle: 'Drag to reorder column',
+    moveLeft: 'Move column left',
+    moveRight: 'Move column right',
     setWip: 'Set WIP limit',
     changeWip: 'Change WIP limit',
     mergeTitle: 'Merge active/done sub-stages',
@@ -191,6 +193,7 @@ export default {
     deleteTask: 'Failed to delete task',
     addStage: 'Failed to add stage',
     updateStage: 'Failed to update stage',
+    reorderStages: 'Failed to reorder stages',
     deleteStage: 'Failed to delete stage',
     renameProject: 'Failed to rename project',
     leaveProject: 'Failed to leave project',
@@ -216,6 +219,7 @@ export default {
     workStageRequired: 'At least one work stage is required',
     stagePermutation: 'stage_ids must be a permutation of the project stages',
     backlogFirst: 'The Backlog stage must stay first',
+    doneLast: 'The Done stage must stay last',
     stageNotFound: 'Stage not found',
     userNotFound: 'User not found',
     memberNotFound: 'Member not found',

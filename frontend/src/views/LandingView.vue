@@ -65,9 +65,6 @@ const mock = computed(() => [
               {{ t('landing.openApp') }}
             </RouterLink>
           </div>
-          <p class="mt-6 font-mono text-[10px] uppercase tracking-widest text-steel">
-            {{ t('landing.stack') }}
-          </p>
         </div>
 
         <!-- mock board -->
@@ -191,9 +188,8 @@ const mock = computed(() => [
       </div>
     </section>
 
-    <footer class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-6">
+    <footer class="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-2 px-4 py-6">
       <span class="font-mono text-[10px] uppercase tracking-widest text-steel">{{ t('landing.copyright') }}</span>
-      <span class="font-mono text-[10px] uppercase tracking-widest text-steel">{{ t('landing.footerStack') }}</span>
     </footer>
   </div>
 </template>
