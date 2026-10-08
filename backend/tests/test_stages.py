@@ -11,6 +11,28 @@ def test_create_stage_inserts_before_done(client, make_project, board):
     assert stages[-1]["is_done"] is True and stages[-1]["position"] == 4
 
 
+def test_create_stage_broadcasts_full_order(client, make_project, monkeypatch):
+    """The renumbering moves Done, so the event must carry every stage's
+    fresh position — clients with a stale Done would sort the new column
+    behind it."""
+    import app.routers.stages as stages_router
+
+    events = []
+
+    async def capture(project_id, payload):
+        events.append(payload)
+
+    monkeypatch.setattr(stages_router.manager, "broadcast", capture)
+    project, headers, _ = make_project()
+    response = client.post(f"/api/projects/{project['id']}/stages", json={"name": "Review"}, headers=headers)
+    assert response.status_code == 201
+
+    event = events[-1]
+    assert event["type"] == "stage.created"
+    assert [s["name"] for s in event["stages"]] == ["Backlog", "ToDo", "Active", "Review", "Done"]
+    assert [s["position"] for s in event["stages"]] == [0, 1, 2, 3, 4]
+
+
 def test_create_stage_with_wip_limit(client, make_project):
     project, headers, _ = make_project()
     response = client.post(

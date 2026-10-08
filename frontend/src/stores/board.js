@@ -108,8 +108,15 @@ export const useBoardStore = defineStore('board', {
           break
 
         case 'stage.created':
-          if (ev.stage && !this.stages.some((s) => s.id === ev.stage.id)) this.stages.push(ev.stage)
-          this.stages.sort((a, b) => a.position - b.position)
+          if (Array.isArray(ev.stages)) {
+            this.stages = ev.stages
+          } else if (ev.stage && !this.stages.some((s) => s.id === ev.stage.id)) {
+            // Fallback for the local add-stage path (no full list): insert
+            // right before Done — the server pins Done last, and its stale
+            // local position must not tie-break the new stage behind it.
+            const doneIdx = this.stages.findIndex((s) => s.is_done)
+            this.stages.splice(doneIdx === -1 ? this.stages.length : doneIdx, 0, ev.stage)
+          }
           this.rebuild()
           break
 

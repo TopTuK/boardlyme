@@ -36,17 +36,21 @@ const showDone = computed({
   },
 })
 
-// Column drag-and-drop: the visible columns are dragged through vuedraggable;
-// the hidden ones (Done by default) are appended so the payload sent to the
-// API stays a full permutation with Backlog first and Done last.
+// Column drag-and-drop: the visible columns are dragged through vuedraggable.
+// commitStageOrder turns a visible-only order into the full permutation the
+// API needs: Done is stripped from the visible order and re-appended exactly
+// once (after the hidden stages), so Backlog stays first and Done stays last.
+function commitStageOrder(visibleOrder) {
+  const work = visibleOrder.filter((s) => !s.is_done)
+  const hidden = store.stages.filter((s) => s.is_hidden && !s.is_done)
+  const full = [...work, ...hidden]
+  if (doneStage.value) full.push(doneStage.value)
+  store.reorderStages(full.map((s) => s.id))
+}
+
 const stageOrder = computed({
   get: () => store.visibleStages,
-  set: (value) => {
-    const hidden = store.stages.filter((s) => s.is_hidden && !s.is_done)
-    const full = [...value, ...hidden]
-    if (doneStage.value) full.push(doneStage.value)
-    store.reorderStages(full.map((s) => s.id))
-  },
+  set: (value) => commitStageOrder(value),
 })
 
 // Backlog is pinned first and Done is pinned last — cancel those drops.

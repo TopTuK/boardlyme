@@ -51,7 +51,17 @@ async def create_stage(project_id: uuid.UUID, body: StageCreate, user: UserDep, 
         s.position = position
     await db.commit()
     await db.refresh(stage)
-    await manager.broadcast(project_id, {"type": "stage.created", "stage": _dump(stage)})
+    await manager.broadcast(
+        project_id,
+        {
+            "type": "stage.created",
+            "stage": _dump(stage),
+            # The renumbering above may have moved other stages (Done in
+            # particular) — send the full order so every client ends up on
+            # the same positions, like the reorder endpoint does.
+            "stages": [_dump(s) for s in ordered],
+        },
+    )
     return stage
 
 
