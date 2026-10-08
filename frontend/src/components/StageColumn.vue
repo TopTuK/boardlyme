@@ -118,6 +118,13 @@ function addTask(payload) {
           </div>
         </div>
         <div v-if="canManage && !stage.is_done" class="mt-2 flex items-center gap-2.5">
+          <span
+            v-if="!stage.is_backlog"
+            class="stage-grip cursor-grab text-steel hover:text-ink active:cursor-grabbing"
+            :title="t('stage.dragTitle')"
+          >
+            <SvgIcon name="lines" :size="11" />
+          </span>
           <button class="font-mono text-[9px] uppercase tracking-widest text-steel hover:text-ink" :title="t('stage.rename')" @click="beginRename">
             <SvgIcon name="pencil" :size="11" />
           </button>

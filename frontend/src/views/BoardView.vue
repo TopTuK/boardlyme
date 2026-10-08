@@ -6,6 +6,7 @@ import { useAuthStore } from '../stores/auth'
 import { useBoardStore } from '../stores/board'
 import { initials, memberName } from '../lib/format'
 import { displayError, stageName } from '../lib/messages'
+import draggable from 'vuedraggable'
 import StageColumn from '../components/StageColumn.vue'
 import TaskModal from '../components/TaskModal.vue'
 import ShareModal from '../components/ShareModal.vue'
@@ -34,6 +35,31 @@ const showDone = computed({
     if (doneStage.value) store.updateStage(doneStage.value.id, { is_hidden: !value })
   },
 })
+
+// Column drag-and-drop: the visible columns are dragged through vuedraggable;
+// the hidden ones (Done by default) are appended so the payload sent to the
+// API stays a full permutation with Backlog first and Done last.
+const stageOrder = computed({
+  get: () => store.visibleStages,
+  set: (value) => {
+    const hidden = store.stages.filter((s) => s.is_hidden && !s.is_done)
+    const full = [...value, ...hidden]
+    if (doneStage.value) full.push(doneStage.value)
+    store.reorderStages(full.map((s) => s.id))
+  },
+})
+
+// Backlog is pinned first and Done is pinned last — cancel those drops.
+function onStageMove(evt) {
+  const stage = evt.draggedContext.element
+  if (stage.is_backlog || stage.is_done) return false
+  const { futureIndex } = evt.draggedContext
+  if (futureIndex === 0) return false
+  const visible = store.visibleStages
+  const last = visible[visible.length - 1]
+  if (last?.is_done && futureIndex >= visible.length) return false
+  return true
+}
 
 function load() {
   const id = route.params.id
@@ -212,23 +238,35 @@ async function openAddStage() {
 
     <!-- columns -->
     <div class="flex min-h-0 flex-1 items-stretch gap-3 overflow-x-auto bg-blueprint p-3">
-      <StageColumn
-        v-for="stage in store.visibleStages"
-        :key="stage.id"
-        :stage="stage"
-        :tasks="store.lanes(stage.id).active"
-        :done-tasks="store.lanes(stage.id).done"
-        :can-manage="isOwner"
-        @move="(taskId, index, lane) => store.moveTask(taskId, stage.id, index, lane)"
-        @open-task="openTask"
-        @complete="(task) => store.completeTask(task.id)"
-        @update-task="(task, patch) => store.updateTask(task.id, patch)"
-        @rename="(name) => store.updateStage(stage.id, { name })"
-        @delete="askDeleteStage(stage)"
-        @add-task="(payload) => store.createTask(stage.id, payload)"
-        @set-wip="(value) => store.setWipLimit(stage.id, value)"
-        @toggle-split="(value) => store.toggleSplit(stage.id, value)"
-      />
+      <draggable
+        v-model="stageOrder"
+        :move="onStageMove"
+        :disabled="!isOwner"
+        item-key="id"
+        tag="div"
+        :animation="150"
+        ghost-class="drag-ghost"
+        handle=".stage-grip"
+        class="flex items-stretch gap-3"
+      >
+        <template #item="{ element: stage }">
+          <StageColumn
+            :stage="stage"
+            :tasks="store.lanes(stage.id).active"
+            :done-tasks="store.lanes(stage.id).done"
+            :can-manage="isOwner"
+            @move="(taskId, index, lane) => store.moveTask(taskId, stage.id, index, lane)"
+            @open-task="openTask"
+            @complete="(task) => store.completeTask(task.id)"
+            @update-task="(task, patch) => store.updateTask(task.id, patch)"
+            @rename="(name) => store.updateStage(stage.id, { name })"
+            @delete="askDeleteStage(stage)"
+            @add-task="(payload) => store.createTask(stage.id, payload)"
+            @set-wip="(value) => store.setWipLimit(stage.id, value)"
+            @toggle-split="(value) => store.toggleSplit(stage.id, value)"
+          />
+        </template>
+      </draggable>
 
       <!-- add stage -->
       <div v-if="isOwner" class="w-64 shrink-0 border border-dashed border-ink/15 bg-[#F7F6F1] p-3 sm:w-72">

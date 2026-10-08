@@ -162,25 +162,32 @@ def main():
 
     # --- stages ---
     r = c.post(f"/api/projects/{pid}/stages", json={"name": "Review"}, headers=auth_header(alice["access_token"]))
-    check("add stage", r.status_code == 201 and r.json()["position"] == 4)
+    check("add stage (before done)", r.status_code == 201 and r.json()["position"] == 3)
     review = r.json()
 
     r = c.put(
         f"/api/projects/{pid}/stages/reorder",
-        json={"stage_ids": [backlog["id"], todo["id"], review["id"], active["id"], done["id"]]},
+        json={"stage_ids": [backlog["id"], todo["id"], active["id"], review["id"], done["id"]]},
         headers=auth_header(alice["access_token"]),
     )
     check(
         "reorder stages",
-        r.status_code == 200 and [s["name"] for s in r.json()] == ["Backlog", "ToDo", "Review", "Active", "Done"],
+        r.status_code == 200 and [s["name"] for s in r.json()] == ["Backlog", "ToDo", "Active", "Review", "Done"],
     )
 
     r = c.put(
         f"/api/projects/{pid}/stages/reorder",
-        json={"stage_ids": [todo["id"], backlog["id"], review["id"], active["id"], done["id"]]},
+        json={"stage_ids": [todo["id"], backlog["id"], active["id"], review["id"], done["id"]]},
         headers=auth_header(alice["access_token"]),
     )
     check("backlog must stay first", r.status_code == 400)
+
+    r = c.put(
+        f"/api/projects/{pid}/stages/reorder",
+        json={"stage_ids": [backlog["id"], done["id"], todo["id"], active["id"], review["id"]]},
+        headers=auth_header(alice["access_token"]),
+    )
+    check("done must stay last", r.status_code == 400)
 
     r = c.patch(f"/api/stages/{done['id']}", json={"is_hidden": False}, headers=auth_header(alice["access_token"]))
     check("unhide done stage", r.status_code == 200 and r.json()["is_hidden"] is False)

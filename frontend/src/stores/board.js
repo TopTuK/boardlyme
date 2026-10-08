@@ -320,6 +320,28 @@ export const useBoardStore = defineStore('board', {
       }
     },
 
+    /**
+     * Reorder columns. stageIds must be a permutation of every stage of the
+     * project (hidden included) — the API pins Backlog first and Done last.
+     */
+    async reorderStages(stageIds) {
+      if (!this.project) return false
+      const byId = new Map(this.stages.map((s) => [s.id, s]))
+      const next = stageIds.map((id) => byId.get(id)).filter(Boolean)
+      if (next.length !== this.stages.length) return false
+      const previous = this.stages
+      this.stages = next.map((s, i) => ({ ...s, position: i }))
+      try {
+        const { data } = await api.put(`/projects/${this.project.id}/stages/reorder`, { stage_ids: stageIds })
+        this.stages = data
+        return true
+      } catch (e) {
+        this.stages = previous
+        this._fail(e, 'errors.reorderStages')
+        return false
+      }
+    },
+
     /** value: number to set the limit, null to clear it. */
     async setWipLimit(stageId, value) {
       return this.updateStage(stageId, { wip_limit: value })

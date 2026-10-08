@@ -125,6 +125,7 @@ export default {
   },
   stage: {
     rename: 'Rename stage',
+    dragTitle: 'Drag to reorder column',
     setWip: 'Set WIP limit',
     changeWip: 'Change WIP limit',
     mergeTitle: 'Merge active/done sub-stages',
@@ -191,6 +192,7 @@ export default {
     deleteTask: 'Failed to delete task',
     addStage: 'Failed to add stage',
     updateStage: 'Failed to update stage',
+    reorderStages: 'Failed to reorder stages',
     deleteStage: 'Failed to delete stage',
     renameProject: 'Failed to rename project',
     leaveProject: 'Failed to leave project',
@@ -216,6 +218,7 @@ export default {
     workStageRequired: 'At least one work stage is required',
     stagePermutation: 'stage_ids must be a permutation of the project stages',
     backlogFirst: 'The Backlog stage must stay first',
+    doneLast: 'The Done stage must stay last',
     stageNotFound: 'Stage not found',
     userNotFound: 'User not found',
     memberNotFound: 'Member not found',
