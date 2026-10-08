@@ -12,9 +12,13 @@ const props = defineProps({
   tasks: { type: Array, required: true },
   doneTasks: { type: Array, default: () => [] },
   canManage: { type: Boolean, default: false },
+  // Whether the stage has room to shift one slot left/right (Backlog is
+  // pinned first, Done last) — drives the keyboard move controls.
+  canMoveLeft: { type: Boolean, default: false },
+  canMoveRight: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['move', 'open-task', 'complete', 'update-task', 'rename', 'delete', 'add-task', 'set-wip', 'toggle-split'])
+const emit = defineEmits(['move', 'move-stage', 'open-task', 'complete', 'update-task', 'rename', 'delete', 'add-task', 'set-wip', 'toggle-split'])
 const { t } = useI18n()
 
 const editing = ref(false)
@@ -125,6 +129,24 @@ function addTask(payload) {
           >
             <SvgIcon name="lines" :size="11" />
           </span>
+          <template v-if="!stage.is_backlog">
+            <button
+              class="text-steel hover:text-ink disabled:cursor-default disabled:opacity-40 disabled:hover:text-steel"
+              :disabled="!canMoveLeft"
+              :title="t('stage.moveLeft')"
+              @click="$emit('move-stage', -1)"
+            >
+              <SvgIcon name="left" :size="11" />
+            </button>
+            <button
+              class="text-steel hover:text-ink disabled:cursor-default disabled:opacity-40 disabled:hover:text-steel"
+              :disabled="!canMoveRight"
+              :title="t('stage.moveRight')"
+              @click="$emit('move-stage', 1)"
+            >
+              <SvgIcon name="right" :size="11" />
+            </button>
+          </template>
           <button class="font-mono text-[9px] uppercase tracking-widest text-steel hover:text-ink" :title="t('stage.rename')" @click="beginRename">
             <SvgIcon name="pencil" :size="11" />
           </button>

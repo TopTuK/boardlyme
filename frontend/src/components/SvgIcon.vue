@@ -17,6 +17,8 @@ const PATHS = {
   share: 'M8 2v8M5 5l3-3 3 3M3 10v3h10v-3',
   logout: 'M6 2h7v12H6M2 8h8M7 5L4 8l3 3',
   back: 'M10 3L5 8l5 5',
+  left: 'M10 3L5 8l5 5',
+  right: 'M6 3l5 5-5 5',
   lines: 'M3 4h10M3 8h10M3 12h7',
   square: 'M4 4h8v8H4z',
   clock: 'M8 14A6 6 0 108 2a6 6 0 000 12zM8 5v3l2 2',

@@ -65,6 +65,24 @@ function onStageMove(evt) {
   return true
 }
 
+// Keyboard stage moves share the pins: never before Backlog, never past Done.
+function canMoveStage(stage, dir) {
+  const visible = store.visibleStages
+  const idx = visible.findIndex((s) => s.id === stage.id)
+  if (idx === -1 || stage.is_backlog || stage.is_done) return false
+  const maxIdx = visible[visible.length - 1]?.is_done ? visible.length - 2 : visible.length - 1
+  const target = idx + dir
+  return target >= 1 && target <= maxIdx
+}
+
+function moveStage(stage, dir) {
+  if (!canMoveStage(stage, dir)) return
+  const visible = [...store.visibleStages]
+  const idx = visible.findIndex((s) => s.id === stage.id)
+  visible.splice(idx + dir, 0, ...visible.splice(idx, 1))
+  commitStageOrder(visible)
+}
+
 function load() {
   const id = route.params.id
   store
@@ -259,7 +277,10 @@ async function openAddStage() {
             :tasks="store.lanes(stage.id).active"
             :done-tasks="store.lanes(stage.id).done"
             :can-manage="isOwner"
+            :can-move-left="canMoveStage(stage, -1)"
+            :can-move-right="canMoveStage(stage, 1)"
             @move="(taskId, index, lane) => store.moveTask(taskId, stage.id, index, lane)"
+            @move-stage="(dir) => moveStage(stage, dir)"
             @open-task="openTask"
             @complete="(task) => store.completeTask(task.id)"
             @update-task="(task, patch) => store.updateTask(task.id, patch)"

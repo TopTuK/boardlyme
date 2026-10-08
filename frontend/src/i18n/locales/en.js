@@ -125,6 +125,8 @@ export default {
   stage: {
     rename: 'Rename stage',
     dragTitle: 'Drag to reorder column',
+    moveLeft: 'Move column left',
+    moveRight: 'Move column right',
     setWip: 'Set WIP limit',
     changeWip: 'Change WIP limit',
     mergeTitle: 'Merge active/done sub-stages',
