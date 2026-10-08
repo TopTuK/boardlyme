@@ -1,4 +1,5 @@
 <script setup>
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
@@ -8,13 +9,17 @@ import { LOCALES, applyLocale } from '../i18n'
 const { t, locale } = useI18n()
 const auth = useAuthStore()
 const router = useRouter()
+const switching = ref(false)
 
 async function chooseLanguage(code) {
-  if (code === locale.value) return
+  if (code === locale.value || switching.value) return
+  switching.value = true
   try {
     await auth.updateLocale(code)
   } catch {
     applyLocale(code) // keep the local switch even if the profile save failed
+  } finally {
+    switching.value = false
   }
 }
 
@@ -40,8 +45,9 @@ function logout() {
             v-for="item in LOCALES"
             :key="item.code"
             type="button"
-            class="px-1.5 py-1 font-mono text-[10px] uppercase tracking-widest"
+            class="px-1.5 py-1 font-mono text-[10px] uppercase tracking-widest disabled:cursor-default disabled:opacity-60"
             :class="locale === item.code ? 'bg-ink text-paper' : 'text-steel hover:text-ink'"
+            :disabled="switching"
             @click="chooseLanguage(item.code)"
           >
             {{ item.code }}
