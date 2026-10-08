@@ -2,8 +2,10 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { stageName } from '../lib/messages'
+import { useAuthStore } from '../stores/auth'
 
 const { t } = useI18n()
+const auth = useAuthStore()
 
 const features = computed(() => [
   { no: '01', title: t('landing.f1Title'), text: t('landing.f1Text') },
@@ -30,6 +32,7 @@ const mock = computed(() => [
           <span class="text-base font-black tracking-tight">BOARDLY</span>
         </div>
         <RouterLink
+          v-if="!auth.isAuthenticated"
           to="/login"
           class="border-2 border-ink px-4 py-2 font-mono text-[11px] uppercase tracking-widest hover:bg-ink hover:text-paper"
         >
@@ -53,6 +56,7 @@ const mock = computed(() => [
           </p>
           <div class="mt-8 flex flex-wrap gap-3">
             <RouterLink
+              v-if="!auth.isAuthenticated"
               to="/login"
               class="bg-ink px-5 py-3 font-mono text-xs uppercase tracking-widest text-paper shadow-offset transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-signal"
             >
