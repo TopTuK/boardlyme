@@ -24,6 +24,13 @@ router.beforeEach(async (to) => {
   if (to.meta.auth && !auth.isAuthenticated) {
     return { name: 'login', query: to.fullPath !== '/' ? { redirect: to.fullPath } : {} }
   }
+  // Already signed in — the login page has nothing to offer.
+  if (to.name === 'login' && auth.isAuthenticated) {
+    const { redirect } = to.query
+    const target =
+      typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('/login') ? redirect : '/boards'
+    return target
+  }
 })
 
 export default router
