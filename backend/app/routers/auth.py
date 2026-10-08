@@ -55,10 +55,10 @@ async def _upsert_telegram_user(db, tg_user: dict) -> User:
     return user
 
 
-async def _login_with_telegram_payload(db, raw: str) -> TokenPair:
+async def _login_with_telegram_payload(db, raw: str, *, webapp: bool) -> TokenPair:
     if not settings.bot_token:
         raise HTTPException(status_code=503, detail="BOT_TOKEN is not configured")
-    data = verify_telegram_query(raw, settings.bot_token)
+    data = verify_telegram_query(raw, settings.bot_token, webapp=webapp)
     if data is None:
         raise HTTPException(status_code=401, detail="Invalid Telegram signature")
     tg_user = extract_telegram_user(data)
@@ -71,13 +71,13 @@ async def _login_with_telegram_payload(db, raw: str) -> TokenPair:
 @router.post("/telegram/widget", response_model=TokenPair)
 async def widget_login(body: WidgetAuthIn, db: DbDep) -> TokenPair:
     """Exchange a Telegram Login Widget redirect payload for app tokens."""
-    return await _login_with_telegram_payload(db, body.data)
+    return await _login_with_telegram_payload(db, body.data, webapp=False)
 
 
 @router.post("/telegram/miniapp", response_model=TokenPair)
 async def miniapp_login(body: MiniAppAuthIn, db: DbDep) -> TokenPair:
     """Exchange Telegram Mini App `initData` for app tokens."""
-    return await _login_with_telegram_payload(db, body.init_data)
+    return await _login_with_telegram_payload(db, body.init_data, webapp=True)
 
 
 @router.post("/dev-login", response_model=TokenPair)

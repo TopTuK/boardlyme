@@ -4,11 +4,15 @@ import json
 from urllib.parse import parse_qsl
 
 
-def verify_telegram_query(raw: str, bot_token: str) -> dict | None:
+def verify_telegram_query(raw: str, bot_token: str, *, webapp: bool = False) -> dict | None:
     """Validate a Telegram-signed query string.
 
-    Works for both the Login Widget redirect payload and the Mini App `initData`:
-    both use the same HMAC-SHA256 scheme with the "WebAppData"-derived secret.
+    Works for both the Login Widget redirect payload and the Mini App
+    `initData` — the data-check-string algorithm is shared, but the HMAC
+    secret is derived differently per Telegram's docs:
+
+      - Login Widget (webapp=False): secret = SHA256(bot_token)
+      - Mini App initData (webapp=True): secret = HMAC_SHA256("WebAppData", bot_token)
 
     Returns the parsed fields (without the hash) on success, None otherwise.
     """
@@ -21,7 +25,10 @@ def verify_telegram_query(raw: str, bot_token: str) -> dict | None:
         return None
 
     data_check_string = "\n".join(f"{k}={v}" for k, v in sorted(data.items()))
-    secret_key = hmac.new(b"WebAppData", bot_token.encode(), hashlib.sha256).digest()
+    if webapp:
+        secret_key = hmac.new(b"WebAppData", bot_token.encode(), hashlib.sha256).digest()
+    else:
+        secret_key = hashlib.sha256(bot_token.encode()).digest()
     calculated = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
     if not hmac.compare_digest(calculated, received_hash):
         return None
