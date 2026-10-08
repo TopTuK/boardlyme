@@ -27,6 +27,7 @@ export default {
   header: {
     exit: 'Выход',
     settings: 'Настройки',
+    language: 'Язык',
   },
   settings: {
     title: 'Настройки',
@@ -43,7 +44,6 @@ export default {
       'Канбан без лишнего для личных задач. Проекты, свои колонки, задачи до «готово». Работает в браузере и прямо в Telegram.',
     loginTelegram: 'Войти через Telegram',
     openApp: 'Открыть приложение →',
-    stack: 'Vue 3 · FastAPI · PostgreSQL · Telegram Mini App',
     fig: 'Рис. 1 — сборка доски',
     figShop: 'Рис. 2 — цех',
     figKit: 'Рис. 3 — полевой комплект',
@@ -61,7 +61,6 @@ export default {
     step3Title: 'Тащи. Назначай. Готово.',
     step3Text: 'Вся доска в кармане, синхронно с сайтом.',
     copyright: 'Boardly © 2026',
-    footerStack: 'Vue · FastAPI · PostgreSQL · Docker',
     f1Title: 'Создавай проекты',
     f1Text: 'Доска на проект — в один клик. Работа, дом, побочное — у каждого своя линия сборки.',
     f2Title: 'Настраивай колонки',
@@ -78,7 +77,7 @@ export default {
     mock3: 'Продлить паспорт',
     mock4: 'Переписать авторизацию',
     mock5: 'Квартальный отчёт',
-    mock6: 'Поднять Docker',
+    mock6: 'Настроить резервные копии',
   },
   login: {
     access: 'Контроль доступа',

@@ -27,6 +27,7 @@ export default {
   header: {
     exit: 'Exit',
     settings: 'Settings',
+    language: 'Language',
   },
   settings: {
     title: 'Settings',
@@ -43,7 +44,6 @@ export default {
       'A no-nonsense Kanban board for your personal workloads. Spin up projects, shape the stages, drag tasks to done. Runs on the web — and right inside Telegram.',
     loginTelegram: 'Log in with Telegram',
     openApp: 'Open the app →',
-    stack: 'Vue 3 · FastAPI · PostgreSQL · Telegram Mini App',
     fig: 'Fig. 1 — Board Assembly',
     figShop: 'Fig. 2 — Shop floor',
     figKit: 'Fig. 3 — Field kit',
@@ -61,7 +61,6 @@ export default {
     step3Title: 'Drag. Assign. Done.',
     step3Text: 'The full board in your pocket, synced live with the website.',
     copyright: 'Boardly © 2026',
-    footerStack: 'Vue · FastAPI · PostgreSQL · Docker',
     f1Title: 'Create projects',
     f1Text: 'Spin up a board per project in one click. Work, home, side hustle — each gets its own assembly line.',
     f2Title: 'Shape your stages',
@@ -78,7 +77,7 @@ export default {
     mock3: 'Renew passport',
     mock4: 'Refactor auth flow',
     mock5: 'Quarterly report',
-    mock6: 'Set up Docker',
+    mock6: 'Set up backups',
   },
   login: {
     access: 'Access Control',

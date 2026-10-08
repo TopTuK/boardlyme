@@ -3,10 +3,20 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { displayName } from '../lib/format'
+import { LOCALES, applyLocale } from '../i18n'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const auth = useAuthStore()
 const router = useRouter()
+
+async function chooseLanguage(code) {
+  if (code === locale.value) return
+  try {
+    await auth.updateLocale(code)
+  } catch {
+    applyLocale(code) // keep the local switch even if the profile save failed
+  }
+}
 
 function logout() {
   auth.logout()
@@ -25,6 +35,18 @@ function logout() {
         <span class="hidden font-mono text-[11px] uppercase tracking-widest text-steel sm:inline">
           {{ displayName(auth.user) }}
         </span>
+        <div class="flex items-center border border-line" :title="t('header.language')">
+          <button
+            v-for="item in LOCALES"
+            :key="item.code"
+            type="button"
+            class="px-1.5 py-1 font-mono text-[10px] uppercase tracking-widest"
+            :class="locale === item.code ? 'bg-ink text-paper' : 'text-steel hover:text-ink'"
+            @click="chooseLanguage(item.code)"
+          >
+            {{ item.code }}
+          </button>
+        </div>
         <RouterLink
           to="/settings"
           class="flex items-center gap-1 border border-transparent px-2 py-1 font-mono text-[11px] uppercase tracking-widest text-steel hover:border-ink hover:text-ink"
