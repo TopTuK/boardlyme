@@ -39,4 +39,15 @@ router.beforeEach(async (to) => {
   }
 })
 
+// Google Analytics: gtag.js is loaded in index.html. Its automatic page_view is
+// disabled there, so every navigation (including the initial one) is tracked here.
+router.afterEach((to) => {
+  if (typeof window.gtag === 'function') {
+    window.gtag('event', 'page_view', {
+      page_path: to.fullPath,
+      page_title: document.title,
+    })
+  }
+})
+
 export default router
