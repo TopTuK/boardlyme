@@ -28,6 +28,11 @@ const newStageName = ref('')
 
 const isOwner = computed(() => !!(store.project && auth.user && store.project.owner_id === auth.user.id))
 const activeTask = computed(() => store.tasks.find((t) => t.id === activeTaskId.value) || null)
+// Mirrors the API guard: a task is done in a Done stage or a done sub-stage.
+const activeTaskCount = computed(() => {
+  const doneStageIds = new Set(store.stages.filter((s) => s.is_done).map((s) => s.id))
+  return store.tasks.filter((t) => !doneStageIds.has(t.stage_id) && !t.stage_done).length
+})
 const doneStage = computed(() => store.doneStage)
 const showDone = computed({
   get: () => (doneStage.value ? !doneStage.value.is_hidden : false),
@@ -120,6 +125,21 @@ function askLeave() {
     confirmLabel: t('board.leave'),
     onConfirm: async () => {
       if (await store.leaveProject()) router.replace('/boards')
+    },
+  }
+}
+
+function askDeleteProject() {
+  if (activeTaskCount.value) {
+    store.error = 'api.projectHasActiveTasks'
+    return
+  }
+  confirmState.value = {
+    title: t('board.deleteProjectTitle', { name: store.project.name.toUpperCase() }),
+    message: t('board.deleteProjectMessage', { name: store.project.name }),
+    confirmLabel: t('common.yesDelete'),
+    onConfirm: async () => {
+      if (await store.deleteProject()) router.replace('/boards')
     },
   }
 }
@@ -240,6 +260,9 @@ async function openAddStage() {
           {{ store.wsStatus === 'on' ? t('board.live') : store.polling ? t('board.poll') : t('board.offline') }}
         </span>
 
+        <Btn v-if="isOwner" variant="ghost" :title="t('board.deleteTitle')" @click="askDeleteProject">
+          <SvgIcon name="trash" :size="12" /> {{ t('board.delete') }}
+        </Btn>
         <Btn v-if="isOwner" variant="ghost" @click="shareOpen = true">
           <SvgIcon name="share" :size="12" /> {{ t('board.share') }}
         </Btn>
