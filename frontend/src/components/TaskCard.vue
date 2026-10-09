@@ -1,7 +1,8 @@
 <script setup>
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { deadlineState, displayName, fmtDeadline, initials } from '../lib/format'
+import { deadlineState, displayName, fmtDeadline } from '../lib/format'
+import MemberAvatar from './MemberAvatar.vue'
 import { COMPLEXITY_LEVELS, DEFAULT_COMPLEXITY, complexityLabel } from '../lib/complexity'
 
 const props = defineProps({
@@ -23,7 +24,6 @@ const descEl = ref(null)
 const done = computed(() => !!props.task.completed_at)
 const stageDone = computed(() => !!props.task.stage_done && !done.value)
 const dlState = computed(() => deadlineState(props.task.deadline))
-const assigneeInitials = computed(() => (props.task.assignee ? initials(props.task.assignee) : ''))
 const assigneeTitle = computed(() => (props.task.assignee ? displayName(props.task.assignee) : ''))
 const checklist = computed(() => props.task.checklist || [])
 const checklistDone = computed(() => checklist.value.filter((i) => i.is_done).length)
@@ -199,13 +199,13 @@ function finish() {
           <SvgIcon name="calendar" :size="10" />
           {{ fmtDeadline(task.deadline) }}
         </span>
-        <span
+        <MemberAvatar
           v-if="task.assignee"
-          class="ml-auto flex h-5 w-5 items-center justify-center bg-ink font-mono text-[9px] font-bold text-paper"
+          class="ml-auto"
+          :user="task.assignee"
+          :size="20"
           :title="assigneeTitle"
-        >
-          {{ assigneeInitials }}
-        </span>
+        />
       </div>
     </div>
   </article>

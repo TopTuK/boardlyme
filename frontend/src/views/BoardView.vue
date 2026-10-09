@@ -4,7 +4,8 @@ import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useBoardStore } from '../stores/board'
-import { initials, memberName } from '../lib/format'
+import { memberName } from '../lib/format'
+import MemberAvatar from '../components/MemberAvatar.vue'
 import { displayError, stageName } from '../lib/messages'
 import draggable from 'vuedraggable'
 import CreateTaskModal from '../components/CreateTaskModal.vue'
@@ -230,15 +231,13 @@ async function openAddStage() {
       <div class="ml-auto flex flex-wrap items-center gap-2">
         <!-- members -->
         <div class="flex -space-x-1">
-          <span
+          <MemberAvatar
             v-for="m in store.members"
             :key="m.user_id"
+            :user="m"
+            :owner="m.role === 'owner'"
             :title="memberName(m)"
-            class="flex h-6 w-6 items-center justify-center border border-ink bg-white font-mono text-[9px] font-bold"
-            :class="m.role === 'owner' ? 'bg-ink text-paper' : ''"
-          >
-            {{ initials(m) }}
-          </span>
+          />
         </div>
 
         <!-- show done toggle -->

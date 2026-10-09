@@ -2,7 +2,8 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useBoardStore } from '../stores/board'
-import { initials, memberName } from '../lib/format'
+import { memberName } from '../lib/format'
+import MemberAvatar from './MemberAvatar.vue'
 
 const emit = defineEmits(['close'])
 const { t } = useI18n()
@@ -55,12 +56,7 @@ onBeforeUnmount(() => {
           </h3>
           <ul class="divide-y divide-line border border-line bg-white">
             <li v-for="m in board.members" :key="m.user_id" class="flex items-center gap-3 px-3 py-2">
-              <span
-                class="flex h-6 w-6 items-center justify-center border border-ink bg-white font-mono text-[9px] font-bold"
-                :class="m.role === 'owner' ? 'bg-ink text-paper' : ''"
-              >
-                {{ initials(m) }}
-              </span>
+              <MemberAvatar :user="m" :owner="m.role === 'owner'" :title="memberName(m)" />
               <span class="min-w-0 flex-1 truncate text-[13px]">{{ memberName(m) }}</span>
               <span
                 class="px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest"
@@ -92,9 +88,7 @@ onBeforeUnmount(() => {
 
           <ul v-if="results.length" class="mt-2 divide-y divide-line border border-line bg-white">
             <li v-for="u in results" :key="u.id" class="flex items-center gap-3 px-3 py-2">
-              <span class="flex h-6 w-6 items-center justify-center border border-ink bg-white font-mono text-[9px] font-bold">
-                {{ initials(u) }}
-              </span>
+              <MemberAvatar :user="u" :title="memberName(u)" />
               <span class="min-w-0 flex-1 truncate text-[13px]">{{ memberName(u) }}</span>
               <Btn v-if="!u.is_member" variant="ghost" @click="board.addMember(u.id)">
                 <SvgIcon name="plus" :size="11" /> {{ t('common.add') }}
