@@ -34,7 +34,7 @@ function progress(p) {
 </script>
 
 <template>
-  <main class="mx-auto max-w-6xl px-4 py-8">
+  <main class="mx-auto max-w-6xl px-4 py-8 safe-px">
     <!-- heading -->
     <div class="flex flex-wrap items-end justify-between gap-3 border-b-2 border-ink pb-4">
       <div class="flex items-baseline gap-3">
@@ -49,16 +49,18 @@ function progress(p) {
     </p>
 
     <!-- composer -->
-    <form v-if="creating && !atLimit"class="mt-4 flex gap-2" @submit.prevent="create">
+    <form v-if="creating && !atLimit" class="mt-4 flex flex-col gap-2 sm:flex-row" @submit.prevent="create">
       <input
         v-model="name"
         :placeholder="t('boards.name')"
         maxlength="200"
         autofocus
-        class="min-w-0 flex-1 border-2 border-ink bg-white px-3 py-2 text-sm font-semibold uppercase outline-none focus:border-signal"
+        class="min-h-11 min-w-0 flex-1 border-2 border-ink bg-white px-3 py-2 text-sm font-semibold uppercase outline-none focus:border-signal"
       />
-      <Btn :disabled="!name.trim()">{{ t('common.create') }}</Btn>
-      <Btn variant="ghost" type="button" @click="((creating = false), (name = ''))">{{ t('common.cancel') }}</Btn>
+      <div class="flex gap-2">
+        <Btn class="flex-1 sm:flex-none" :disabled="!name.trim()">{{ t('common.create') }}</Btn>
+        <Btn class="flex-1 sm:flex-none" variant="ghost" type="button" @click="((creating = false), (name = ''))">{{ t('common.cancel') }}</Btn>
+      </div>
     </form>
 
     <p v-if="projects.error" class="mt-4 border border-[#C92A2A] bg-[#C92A2A]/10 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-[#C92A2A]">

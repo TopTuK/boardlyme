@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { stageName } from '../lib/messages'
 import { useAuthStore } from '../stores/auth'
+import OverflowMenu from '../components/OverflowMenu.vue'
 
 const { t } = useI18n()
 const auth = useAuthStore()
@@ -23,15 +24,15 @@ const mock = computed(() => [
 </script>
 
 <template>
-  <div class="min-h-screen bg-paper">
+  <div class="min-h-dvh bg-paper">
     <!-- top bar -->
-    <header class="border-b-2 border-ink">
-      <div class="mx-auto flex min-h-16 max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
+    <header class="safe-pt safe-px border-b-2 border-ink">
+      <div class="mx-auto flex min-h-14 max-w-6xl items-center justify-between gap-x-4 px-4 py-2">
         <div class="flex items-center gap-2">
           <img src="/icon.png" alt="" width="32" height="32" class="h-8 w-8" />
           <span class="text-base font-black tracking-tight">BOARDLY</span>
         </div>
-        <div class="flex flex-wrap items-center justify-end gap-x-3 gap-y-2">
+        <div class="hidden items-center justify-end gap-x-3 md:flex">
           <RouterLink
             to="/guide"
             class="font-mono text-[11px] uppercase tracking-widest text-steel hover:text-ink"
@@ -52,6 +53,22 @@ const mock = computed(() => [
             {{ t('landing.login') }}
           </RouterLink>
         </div>
+        <div class="flex items-center gap-2 md:hidden">
+          <RouterLink
+            v-if="!auth.isAuthenticated"
+            to="/login"
+            class="border-2 border-ink px-3 py-2 font-mono text-[11px] uppercase tracking-widest hover:bg-ink hover:text-paper"
+          >
+            {{ t('landing.login') }}
+          </RouterLink>
+          <OverflowMenu :label="t('common.more')">
+            <template #default="{ close }">
+              <RouterLink v-if="auth.isAuthenticated" to="/boards" class="menu-item" @click="close">{{ t('landing.openApp') }}</RouterLink>
+              <RouterLink to="/guide" class="menu-item" @click="close">{{ t('guide.link') }}</RouterLink>
+              <RouterLink to="/about" class="menu-item" @click="close">{{ t('about.link') }}</RouterLink>
+            </template>
+          </OverflowMenu>
+        </div>
       </div>
     </header>
 
@@ -62,7 +79,7 @@ const mock = computed(() => [
           <p class="font-mono text-[11px] uppercase tracking-[0.25em] text-signal">
             {{ t('landing.spec') }}
           </p>
-          <h1 class="mt-4 text-5xl font-black leading-[0.95] tracking-tight sm:text-6xl">
+          <h1 class="mt-4 text-4xl font-black leading-[0.95] tracking-tight sm:text-6xl">
             {{ t('landing.heroTitle1') }}<br />{{ t('landing.heroTitle2') }}
           </h1>
           <p class="mt-6 max-w-md text-sm leading-relaxed text-steel">
@@ -85,9 +102,31 @@ const mock = computed(() => [
           </div>
         </div>
 
-        <!-- mock board -->
+        <!-- mock board: station on phone, columns on desktop -->
         <div class="relative self-center">
-          <div class="grid grid-cols-3 gap-2 border-2 border-ink bg-paper p-2 shadow-offset sm:gap-3 sm:p-3">
+          <div class="border-2 border-ink bg-paper p-2 shadow-offset sm:p-3 md:hidden">
+            <div class="mb-2 flex overflow-x-auto border-b-2 border-ink">
+              <span
+                v-for="(col, i) in mock"
+                :key="col.name"
+                class="shrink-0 border-r border-ink px-2 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest"
+                :class="i === 0 ? 'bg-ink text-paper' : 'bg-paper text-steel'"
+              >
+                {{ col.name }}
+              </span>
+            </div>
+            <div class="space-y-2 border border-line bg-white p-2">
+              <div
+                v-for="item in mock[0].items"
+                :key="item.t"
+                class="border px-2 py-2 text-[13px] font-semibold leading-snug"
+                :class="item.accent ? 'border-signal bg-signal/10' : 'border-line text-ink/80'"
+              >
+                {{ item.t }}
+              </div>
+            </div>
+          </div>
+          <div class="hidden grid-cols-3 gap-2 border-2 border-ink bg-paper p-2 shadow-offset sm:gap-3 sm:p-3 md:grid">
             <div v-for="col in mock" :key="col.name" class="border border-line bg-white">
               <div class="flex items-center justify-between border-b border-line px-2 py-1.5">
                 <span class="font-mono text-[10px] font-bold uppercase tracking-widest text-steel">{{ col.name }}</span>

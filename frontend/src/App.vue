@@ -15,7 +15,7 @@ watch(locale, () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-paper font-sans text-ink">
+  <div class="min-h-dvh bg-paper font-sans text-ink">
     <AppHeader v-if="route.meta.app" />
     <router-view />
   </div>

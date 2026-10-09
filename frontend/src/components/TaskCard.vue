@@ -7,9 +7,10 @@ import { COMPLEXITY_LEVELS, DEFAULT_COMPLEXITY, complexityLabel } from '../lib/c
 
 const props = defineProps({
   task: { type: Object, required: true },
+  compact: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['open', 'complete', 'update'])
+const emit = defineEmits(['open', 'complete', 'update', 'move'])
 
 const { t } = useI18n()
 
@@ -101,16 +102,26 @@ function finish() {
   <article
     class="group flex border border-line bg-white transition-colors hover:border-ink focus-within:border-ink"
     :class="done ? 'opacity-60' : ''"
+    @click="compact && $emit('open')"
     @focusin="onFocusIn"
     @focusout="onFocusOut"
   >
     <div
+      v-if="!compact"
       class="card-grip w-2 shrink-0 cursor-grab border-r border-line active:cursor-grabbing"
       :title="t('task.drag')"
     />
     <div class="min-w-0 flex-1">
-      <div class="flex h-8 items-center gap-2 px-2.5">
+      <div class="flex items-center gap-2 px-2.5" :class="compact ? 'min-h-11' : 'h-8'">
+        <h3
+          v-if="compact"
+          class="min-w-0 flex-1 text-[13px] font-semibold leading-5 text-ink"
+          :class="done ? 'line-through decoration-1' : ''"
+        >
+          {{ task.title }}
+        </h3>
         <input
+          v-else
           ref="titleEl"
           v-model="draft.title"
           maxlength="500"
@@ -123,22 +134,36 @@ function finish() {
           @keydown.esc="titleEl?.blur()"
         />
         <button
+          v-if="compact && !done"
+          type="button"
+          class="flex h-9 min-w-9 items-center justify-center text-steel hover:text-ink"
+          :title="t('task.moveTitle')"
+          @click.stop="$emit('move')"
+        >
+          <SvgIcon name="right" :size="13" />
+        </button>
+        <button
           v-if="!done"
           type="button"
-          class="flex h-5 w-5 items-center justify-center text-steel transition-opacity hover:text-signal"
-          :class="dlState === 'overdue' || stageDone ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 focus:opacity-100'"
+          class="flex items-center justify-center text-steel transition-opacity hover:text-signal"
+          :class="compact
+            ? 'h-9 w-9 opacity-100'
+            : dlState === 'overdue' || stageDone
+              ? 'h-5 w-5 opacity-100'
+              : 'h-5 w-5 opacity-0 group-hover:opacity-100 focus:opacity-100'"
           :title="t('task.completeTitle')"
           @click.stop="$emit('complete')"
         >
           <SvgIcon name="check" :size="13" />
         </button>
-        <span v-if="done" class="flex h-5 w-5 items-center justify-center text-signal">
+        <span v-if="done" class="flex items-center justify-center text-signal" :class="compact ? 'h-9 w-9' : 'h-5 w-5'">
           <SvgIcon name="check" :size="13" />
         </span>
-        <span v-else-if="stageDone" class="flex h-5 w-5 items-center justify-center text-steel">
+        <span v-else-if="stageDone && !compact" class="flex h-5 w-5 items-center justify-center text-steel">
           <SvgIcon name="check" :size="13" />
         </span>
         <button
+          v-if="!compact"
           type="button"
           class="flex h-5 w-5 items-center justify-center text-steel hover:text-ink"
           :title="t('task.open')"
@@ -148,7 +173,13 @@ function finish() {
         </button>
       </div>
 
-      <div class="flex items-center gap-2 px-2.5" :class="hasMeta ? 'pb-0.5' : 'pb-2'">
+      <p
+        v-if="compact && task.description"
+        class="line-clamp-2 px-2.5 pb-2 text-[11px] leading-5 text-steel"
+      >
+        {{ task.description }}
+      </p>
+      <div v-else-if="!compact" class="flex items-center gap-2 px-2.5" :class="hasMeta ? 'pb-0.5' : 'pb-2'">
         <textarea
           ref="descEl"
           v-model="draft.description"
@@ -167,8 +198,9 @@ function finish() {
 
       <div
         v-if="hasMeta"
-        class="card-grip flex h-7 cursor-grab items-center gap-2 px-2.5 active:cursor-grabbing"
-        @click="$emit('open')"
+        class="flex items-center gap-2 px-2.5"
+        :class="compact ? 'h-8 cursor-default' : 'card-grip h-7 cursor-grab active:cursor-grabbing'"
+        @click="!compact && $emit('open')"
       >
         <span
           v-if="complexity"

@@ -12,8 +12,8 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <div class="fixed inset-0 z-[60] flex items-center justify-center bg-ink/60 p-4">
-    <div class="w-full max-w-sm border-2 border-ink bg-paper shadow-offset">
+  <div class="sheet-overlay z-[60]" @click.self="emit('cancel')">
+    <div class="sheet-panel max-w-sm" role="dialog" aria-modal="true">
       <header class="border-b-2 border-ink px-4 py-3 font-mono text-xs font-bold uppercase tracking-widest">
         {{ title }}
       </header>
