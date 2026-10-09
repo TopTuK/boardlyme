@@ -27,6 +27,29 @@ def test_create_project_validates_name(client, make_project):
     assert client.post("/api/projects", json={"name": ""}, headers=headers).status_code == 422
 
 
+def test_create_project_limited_to_ten_owned(client, make_project):
+    projects = [make_project("alice", f"P{i}") for i in range(10)]
+    headers = projects[0][1]
+
+    response = client.post("/api/projects", json={"name": "Eleventh"}, headers=headers)
+    assert response.status_code == 409
+    assert response.json()["detail"] == "Project limit reached — delete a project to create a new one"
+
+    # deleting one frees a slot
+    assert client.delete(f"/api/projects/{projects[0][0]['id']}", headers=headers).status_code == 204
+    assert client.post("/api/projects", json={"name": "Eleventh"}, headers=headers).status_code == 201
+
+
+def test_shared_projects_do_not_count_toward_limit(client, make_project, make_user):
+    shared, bob_headers, _ = make_project("bob", "Shared")
+    alice = make_user("alice")
+    client.post(f"/api/projects/{shared['id']}/members", json={"user_id": alice["user"]["id"]}, headers=bob_headers)
+
+    # alice is a member of one project yet can still own ten of her own
+    for i in range(10):
+        make_project("alice", f"P{i}")
+
+
 def test_owner_is_created_as_member(make_project, board):
     project, headers, tokens = make_project()
     members = board(project["id"], headers)["members"]

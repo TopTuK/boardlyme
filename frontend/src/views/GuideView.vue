@@ -38,10 +38,10 @@ const metricTerms = computed(() =>
 </script>
 
 <template>
-  <div class="min-h-screen bg-paper">
+  <div class="min-h-dvh bg-paper">
     <!-- top bar -->
-    <header class="border-b-2 border-ink">
-      <div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
+    <header class="safe-pt safe-px border-b-2 border-ink">
+      <div class="mx-auto flex min-h-14 max-w-6xl items-center justify-between gap-2 px-4 py-2">
         <RouterLink to="/" class="flex items-center gap-2">
           <img src="/icon.png" alt="" width="32" height="32" class="h-8 w-8" />
           <span class="text-base font-black tracking-tight">BOARDLY</span>

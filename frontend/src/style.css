@@ -9,6 +9,7 @@ html {
 
 body {
   @apply bg-paper font-sans text-ink;
+  touch-action: manipulation;
 }
 
 ::selection {
@@ -52,6 +53,39 @@ body {
 /* vuedraggable ghost card */
 .drag-ghost {
   opacity: 0.35;
+}
+
+@layer utilities {
+  .safe-pt {
+    padding-top: env(safe-area-inset-top);
+  }
+  .safe-pb {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .safe-px {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+@layer components {
+  .sheet-overlay {
+    @apply fixed inset-0 z-50 flex items-end justify-center bg-ink/50 sm:items-center sm:p-4;
+  }
+  .sheet-panel {
+    @apply max-h-[100dvh] w-full overflow-y-auto border-2 border-ink bg-paper shadow-offset;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .menu-item {
+    @apply flex w-full items-center gap-2 px-3 py-3 text-left font-mono text-[11px] uppercase tracking-widest text-ink hover:bg-ink hover:text-paper disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-ink;
+  }
+}
+
+@media (min-width: 640px) {
+  .sheet-panel {
+    max-height: 92vh;
+    padding-bottom: 0;
+  }
 }
 
 input[type='date']::-webkit-calendar-picker-indicator {

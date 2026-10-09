@@ -54,7 +54,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="flex min-h-screen items-center justify-center bg-blueprint px-4 py-10">
+  <div class="flex min-h-dvh items-center justify-center bg-blueprint px-4 py-10 safe-px safe-pt safe-pb">
     <div class="w-full max-w-sm border-2 border-ink bg-paper shadow-offset">
       <header class="border-b-2 border-ink px-5 py-4">
         <div class="flex items-center gap-2">
