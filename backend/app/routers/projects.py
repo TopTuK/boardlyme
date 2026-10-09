@@ -170,6 +170,23 @@ async def rename_project(project_id: uuid.UUID, body: ProjectUpdate, user: UserD
 @router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_project(project_id: uuid.UUID, user: UserDep, db: DbDep):
     project, _ = await get_project_with_role(db, user, project_id, need_owner=True)
+
+    # Boards can only be deleted once no active work is left: a task is done
+    # when it sits in a Done stage or in the done sub-stage of a split stage.
+    active_count = (
+        await db.execute(
+            select(func.count(Task.id))
+            .join(Stage, Task.stage_id == Stage.id)
+            .where(Task.project_id == project_id)
+            .where(Stage.is_done.is_(False), Task.stage_done.is_(False))
+        )
+    ).scalar_one()
+    if active_count:
+        raise HTTPException(
+            status_code=409,
+            detail="The project still has active tasks — finish or delete them first",
+        )
+
     await manager.broadcast(project_id, {"type": "project.deleted", "project_id": str(project_id)})
     await manager.close_room(project_id)
     # Explicit deletes keep behaviour identical on databases without FK cascades.

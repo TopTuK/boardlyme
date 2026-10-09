@@ -115,6 +115,11 @@ export default {
     offline: 'Offline',
     share: 'Share',
     leave: 'Leave',
+    delete: 'Delete',
+    deleteTitle: 'Delete this project',
+    deleteProjectTitle: 'Delete project “{name}”',
+    deleteProjectMessage:
+      'Project “{name}” will be deleted with all of its tasks and every member will lose access. This cannot be undone.',
     stageName: 'STAGE NAME',
     addStage: '+ Add stage',
     deleteStageTitle: 'Delete stage “{name}”',
@@ -197,6 +202,7 @@ export default {
     deleteStage: 'Failed to delete stage',
     renameProject: 'Failed to rename project',
     leaveProject: 'Failed to leave project',
+    deleteProject: 'Failed to delete project',
     addMember: 'Failed to add member',
     removeMember: 'Failed to remove member',
     saveSettings: 'Failed to save settings',
@@ -237,5 +243,6 @@ export default {
     projectNotFound: 'Project not found',
     notMember: 'You are not a member of this project',
     ownerOnly: 'Only the project owner can do this',
+    projectHasActiveTasks: 'The project still has active tasks — finish or delete them first',
   },
 }

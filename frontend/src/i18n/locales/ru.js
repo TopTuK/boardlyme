@@ -115,6 +115,11 @@ export default {
     offline: 'Нет сети',
     share: 'Доступ',
     leave: 'Выйти',
+    delete: 'Удалить',
+    deleteTitle: 'Удалить этот проект',
+    deleteProjectTitle: 'Удалить проект «{name}»',
+    deleteProjectMessage:
+      'Проект «{name}» будет удалён вместе со всеми задачами, а участники потеряют доступ. Это нельзя отменить.',
     stageName: 'НАЗВАНИЕ КОЛОНКИ',
     addStage: '+ Добавить колонку',
     deleteStageTitle: 'Удалить колонку «{name}»',
@@ -197,6 +202,7 @@ export default {
     deleteStage: 'Не удалось удалить колонку',
     renameProject: 'Не удалось переименовать проект',
     leaveProject: 'Не удалось покинуть проект',
+    deleteProject: 'Не удалось удалить проект',
     addMember: 'Не удалось добавить участника',
     removeMember: 'Не удалось убрать участника',
     saveSettings: 'Не удалось сохранить настройки',
@@ -237,5 +243,6 @@ export default {
     projectNotFound: 'Проект не найден',
     notMember: 'Вы не участник этого проекта',
     ownerOnly: 'Это может сделать только владелец проекта',
+    projectHasActiveTasks: 'В проекте ещё есть активные задачи — завершите или удалите их',
   },
 }

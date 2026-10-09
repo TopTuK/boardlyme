@@ -393,6 +393,18 @@ export const useBoardStore = defineStore('board', {
       }
     },
 
+    async deleteProject() {
+      if (!this.project) return false
+      try {
+        await api.delete(`/projects/${this.project.id}`)
+        this.disconnectWS()
+        return true
+      } catch (e) {
+        this._fail(e, 'errors.deleteProject')
+        return false
+      }
+    },
+
     async addMember(userId) {
       try {
         const { data } = await api.post(`/projects/${this.project.id}/members`, { user_id: userId })

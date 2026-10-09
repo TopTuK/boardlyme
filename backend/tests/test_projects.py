@@ -95,8 +95,33 @@ def test_delete_project_owner_only(client, make_project, make_user):
 def test_delete_project_cascades_stages_and_tasks(client, make_project, create_task, board):
     project, headers, _ = make_project()
     task = create_task(project["id"], headers, "doomed")
+    assert client.post(f"/api/tasks/{task['id']}/complete", headers=headers).status_code == 200
     assert client.delete(f"/api/projects/{project['id']}", headers=headers).status_code == 204
     assert client.get(f"/api/tasks/{task['id']}", headers=headers).status_code in (404, 405)
+
+
+def test_delete_project_blocked_with_active_tasks(client, make_project, create_task):
+    project, headers, _ = make_project()
+    active = create_task(project["id"], headers, "still open")
+    done = create_task(project["id"], headers, "finished")
+    assert client.post(f"/api/tasks/{done['id']}/complete", headers=headers).status_code == 200
+
+    response = client.delete(f"/api/projects/{project['id']}", headers=headers)
+    assert response.status_code == 409
+
+    # once the last active task is gone the board can be deleted
+    assert client.delete(f"/api/tasks/{active['id']}", headers=headers).status_code == 204
+    assert client.delete(f"/api/projects/{project['id']}", headers=headers).status_code == 204
+    assert client.get(f"/api/projects/{project['id']}", headers=headers).status_code == 404
+
+
+def test_delete_project_allows_done_sub_stage_tasks(client, make_project, create_task, stage_by_name):
+    project, headers, _ = make_project()
+    active_stage = stage_by_name(project["id"], headers, "Active")
+    create_task(project["id"], headers, "lane done", stage_id=active_stage["id"], stage_done=True)
+
+    # tasks resting in a done sub-stage are not active work
+    assert client.delete(f"/api/projects/{project['id']}", headers=headers).status_code == 204
 
 
 def test_leave_project_as_editor(client, make_project, make_user):
