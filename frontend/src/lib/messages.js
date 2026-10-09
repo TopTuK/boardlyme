@@ -30,6 +30,7 @@ const API_KEYS = {
   'The owner cannot be removed': 'api.ownerUndeletable',
   'The owner cannot leave a project — delete it instead': 'api.ownerCannotLeave',
   'The project still has active tasks — finish or delete them first': 'api.projectHasActiveTasks',
+  'Project limit reached — delete a project to create a new one': 'api.projectLimit',
   'BOT_TOKEN is not configured': 'api.botToken',
   'Invalid Telegram signature': 'api.badSignature',
   'Payload contains no user data': 'api.noUserData',

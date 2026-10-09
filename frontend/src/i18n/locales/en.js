@@ -90,7 +90,7 @@ export default {
     step1No: 'STEP 01',
     step1Title: 'Create a context',
     step1Text:
-      'Open the contexts page and hit “New context”. Give it a name — “Work”, “Home”, “Renovation”. Every context gets its own board with four stages out of the box: Backlog, ToDo, Active and Done.',
+      'Open the contexts page and hit “New context”. Give it a name — “Work”, “Home”, “Renovation”. Every context gets its own board with four stages out of the box: Backlog, ToDo, Active and Done. You can own up to 10 contexts (ones shared with you don’t count); to start an eleventh, delete one you no longer need.',
     step1Fig: 'Fig. 1 — Three contexts',
     step1Alt: 'Three separate boards in a workshop, one orange card on the middle board',
     step2No: 'STEP 02',
@@ -164,6 +164,7 @@ export default {
     title: 'CONTEXTS',
     total: '{n} total',
     new: 'New context',
+    limitReached: 'Limit of {n} contexts reached — delete one to add more',
     name: 'CONTEXT NAME',
     tasks: '{count} tasks / {done} done',
     established: 'est. {date}',
@@ -359,6 +360,7 @@ export default {
     projectNotFound: 'Context not found',
     notMember: 'You are not a member of this context',
     ownerOnly: 'Only the context owner can do this',
-    projectHasActiveTasks: 'The context still has active tasks — finish or delete them first',
+    projectLimit: 'You can own at most 10 contexts — delete one to create a new one',
+    projectHasActiveTasks:'The context still has active tasks — finish or delete them first',
   },
 }

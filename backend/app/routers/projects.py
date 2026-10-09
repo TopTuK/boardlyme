@@ -21,6 +21,9 @@ DEFAULT_STAGES: list[dict] = [
     {"name": "Done", "is_done": True, "is_hidden": True},
 ]
 
+# A user may own at most this many projects; shared projects don't count.
+MAX_OWNED_PROJECTS = 10
+
 
 def member_out(member: ProjectMember) -> MemberOut:
     return MemberOut(
@@ -87,7 +90,16 @@ async def list_projects(user: UserDep, db: DbDep):
 
 @router.post("", response_model=ProjectOut, status_code=status.HTTP_201_CREATED)
 async def create_project(body: ProjectCreate, user: UserDep, db: DbDep):
-    project = Project(name=body.name.strip(), owner_id=user.id)
+    owned_count = (
+        await db.execute(select(func.count(Project.id)).where(Project.owner_id == user.id))
+    ).scalar_one()
+    if owned_count >= MAX_OWNED_PROJECTS:
+        raise HTTPException(
+            status_code=409,
+            detail="Project limit reached — delete a project to create a new one",
+        )
+
+    project =Project(name=body.name.strip(), owner_id=user.id)
     db.add(project)
     await db.flush()
     for position, spec in enumerate(DEFAULT_STAGES):
