@@ -170,6 +170,7 @@ export const useBoardStore = defineStore('board', {
       const description = (typeof payload === 'string' ? '' : payload?.description || '').trim()
       const deadline = typeof payload === 'string' ? null : payload?.deadline || null
       const assigneeId = typeof payload === 'string' ? null : payload?.assignee_id || null
+      const complexity = typeof payload === 'string' ? undefined : payload?.complexity || undefined
       if (!title || !this.project) return false
       try {
         const { data } = await api.post(`/projects/${this.project.id}/tasks`, {
@@ -178,6 +179,7 @@ export const useBoardStore = defineStore('board', {
           deadline,
           assignee_id: assigneeId,
           stage_id: stageId,
+          complexity,
         })
         this.applyEvent({ type: 'task.created', task: data })
         return true

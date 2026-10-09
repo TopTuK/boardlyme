@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import { useBoardStore } from '../stores/board'
 import { memberName } from '../lib/format'
+import { COMPLEXITY_LEVELS, DEFAULT_COMPLEXITY, complexityLabel } from '../lib/complexity'
 
 defineProps({
   members: { type: Array, default: () => [] },
@@ -20,6 +21,7 @@ const form = reactive({
   description: '',
   deadline: '',
   assignee_id: '',
+  complexity: DEFAULT_COMPLEXITY,
 })
 const saving = ref(false)
 const titleEl = ref(null)
@@ -78,6 +80,7 @@ async function submit() {
     description: form.description.trim(),
     deadline: form.deadline || null,
     assignee_id: form.assignee_id || null,
+    complexity: form.complexity,
   })
   saving.value = false
   if (ok) emit('close')
@@ -155,6 +158,16 @@ async function submit() {
             </button>
           </label>
         </div>
+
+        <label class="block">
+          <span class="mb-1 block font-mono text-[10px] uppercase tracking-widest text-steel">{{ t('task.complexity') }}</span>
+          <select
+            v-model="form.complexity"
+            class="w-full border border-line bg-white px-3 py-2 text-sm outline-none focus:border-ink sm:w-1/2"
+          >
+            <option v-for="level in COMPLEXITY_LEVELS" :key="level" :value="level">{{ complexityLabel(level) }}</option>
+          </select>
+        </label>
       </div>
 
       <footer class="flex items-center justify-end gap-2 border-t-2 border-ink px-4 py-3">

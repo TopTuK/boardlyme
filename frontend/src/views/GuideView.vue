@@ -1,9 +1,40 @@
 <script setup>
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
+import CfdChart from '../components/CfdChart.vue'
+import { stageName } from '../lib/messages'
 
 const { t } = useI18n()
 const auth = useAuthStore()
+
+// Sample flow for the step 4 figure: two weeks of a board that keeps
+// delivering, ending today.
+const SAMPLE = {
+  Backlog: [4, 4, 4, 5, 4, 4, 5, 4, 4, 4, 5, 4, 4, 5],
+  ToDo: [2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 3, 3, 4, 3],
+  Active: [1, 2, 2, 2, 2, 2, 3, 3, 2, 2, 3, 3, 2, 2],
+  Done: [0, 0, 1, 1, 2, 3, 3, 4, 5, 6, 6, 7, 8, 9],
+}
+
+function isoDaysAgo(n) {
+  const d = new Date()
+  d.setDate(d.getDate() - n)
+  return [d.getFullYear(), d.getMonth() + 1, d.getDate()].map((v) => String(v).padStart(2, '0')).join('-')
+}
+
+const sampleBands = computed(() => Object.keys(SAMPLE).map((key) => ({ key, label: stageName(key) })))
+const samplePoints = SAMPLE.Done.map((_, i) => ({
+  day: isoDaysAgo(SAMPLE.Done.length - 1 - i),
+  counts: Object.fromEntries(Object.entries(SAMPLE).map(([key, values]) => [key, values[i]])),
+}))
+
+const metricTerms = computed(() =>
+  ['Cycle', 'Ttm', 'Cfd', 'Levels'].map((k) => ({
+    title: t(`guide.step4${k}Title`),
+    text: t(`guide.step4${k}Text`),
+  }))
+)
 </script>
 
 <template>
@@ -112,6 +143,31 @@ const auth = useAuthStore()
               />
               <figcaption class="absolute left-3 top-3 bg-paper px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-steel">
                 {{ t('guide.step3Fig') }}
+              </figcaption>
+            </figure>
+          </div>
+        </article>
+        <article class="border-2 border-ink bg-white shadow-offset">
+          <div class="grid lg:grid-cols-2 lg:items-center">
+            <div class="grid gap-4 p-6 sm:grid-cols-[auto_1fr] sm:p-8">
+              <span class="font-mono text-2xl font-black text-signal">{{ t('guide.step4No') }}</span>
+              <div>
+                <h2 class="text-lg font-black uppercase tracking-tight">{{ t('guide.step4Title') }}</h2>
+                <p class="mt-3 text-[13px] leading-relaxed text-steel">{{ t('guide.step4Text') }}</p>
+                <dl class="mt-4 space-y-3 border-l-2 border-ink pl-4">
+                  <div v-for="term in metricTerms" :key="term.title">
+                    <dt class="font-mono text-[11px] font-bold uppercase tracking-widest text-ink">{{ term.title }}</dt>
+                    <dd class="mt-0.5 text-[13px] leading-relaxed text-steel">{{ term.text }}</dd>
+                  </div>
+                </dl>
+                <p class="mt-4 text-[12px] leading-relaxed text-steel">{{ t('guide.step4Note') }}</p>
+              </div>
+            </div>
+            <!-- min-w-0: let the grid track shrink so the chart measures its real width -->
+            <figure class="relative min-w-0 border-t-2 border-ink px-4 pb-4 pt-10 lg:border-l-2 lg:border-t-0">
+              <CfdChart :bands="sampleBands" :points="samplePoints" :total-label="t('metrics.total')" />
+              <figcaption class="absolute left-3 top-3 bg-paper px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-steel">
+                {{ t('guide.step4Fig') }}
               </figcaption>
             </figure>
           </div>

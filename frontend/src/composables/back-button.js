@@ -14,7 +14,7 @@ export function useBackButton() {
     () => {
       const t = tg()
       if (!t || !t.BackButton) return
-      if (route.name === 'board') {
+      if (route.name === 'board' || route.name === 'metrics') {
         t.BackButton.onClick(onClick)
         t.BackButton.show()
       } else {

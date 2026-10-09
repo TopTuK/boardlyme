@@ -12,6 +12,10 @@ def _required_text(value: str) -> str:
     return value
 
 
+# Mirrors app.models.COMPLEXITY_LEVELS (lowest to highest).
+Complexity = Literal["coffee", "easy", "normal", "difficult", "very_difficult", "unknown"]
+
+
 # --------------------------------------------------------------------------- #
 # Users / auth
 # --------------------------------------------------------------------------- #
@@ -139,6 +143,7 @@ class TaskCreate(BaseModel):
     # True creates the task straight into the "done" sub-stage of a split stage.
     stage_done: bool = False
     assignee_id: uuid.UUID | None = None
+    complexity: Complexity = "normal"
 
     _strip_title = field_validator("title", mode="after")(_required_text)
 
@@ -148,6 +153,8 @@ class TaskUpdate(BaseModel):
     description: str | None = Field(default=None, max_length=10000)
     deadline: date | None = None
     assignee_id: uuid.UUID | None = None
+    # Required on the task: omitting it (or sending null) leaves it untouched.
+    complexity: Complexity | None = None
 
     _strip_title = field_validator("title", mode="after")(_required_text)
 
@@ -194,6 +201,7 @@ class TaskOut(BaseModel):
     position: int
     stage_done: bool = False
     completed_at: datetime | None = None
+    complexity: Complexity = "normal"
     created_at: datetime
     updated_at: datetime
     assignee: UserOut | None = None
@@ -251,3 +259,54 @@ class BoardOut(BaseModel):
     stages: list[StageOut]
     tasks: list[TaskOut]
     members: list[MemberOut]
+
+
+# --------------------------------------------------------------------------- #
+# Flow metrics
+# --------------------------------------------------------------------------- #
+
+
+class DurationStats(BaseModel):
+    """Durations in days (1 decimal); null when there is nothing to measure."""
+
+    count: int = 0
+    avg: float | None = None
+    median: float | None = None
+    p85: float | None = None
+
+
+class ComplexityStats(BaseModel):
+    complexity: Complexity
+    completed: int
+    cycle_time: DurationStats
+    time_to_market: DurationStats
+
+
+class CfdBand(BaseModel):
+    """One band of the cumulative flow diagram — a stage, or one lane of a split stage."""
+
+    key: str
+    stage_id: uuid.UUID
+    name: str
+    lane: Literal["active", "done"] | None = None
+    is_backlog: bool = False
+    is_done: bool = False
+
+
+class CfdPoint(BaseModel):
+    day: date
+    # band key -> tasks in that band at the end of the day
+    counts: dict[str, int]
+
+
+class MetricsOut(BaseModel):
+    project_name: str
+    period_start: date
+    period_end: date
+    throughput: int
+    wip: int
+    cycle_time: DurationStats
+    time_to_market: DurationStats
+    by_complexity: list[ComplexityStats]
+    cfd_bands: list[CfdBand]
+    cfd: list[CfdPoint]

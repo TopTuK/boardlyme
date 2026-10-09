@@ -7,6 +7,7 @@ from sqlalchemy import (
     Date,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
@@ -19,6 +20,11 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 class Base(DeclarativeBase):
     pass
+
+
+# Task complexity levels, lowest to highest — the tuple order is the rank.
+# "unknown" ("Who knows") deliberately ranks above "very_difficult".
+COMPLEXITY_LEVELS: tuple[str, ...] = ("coffee", "easy", "normal", "difficult", "very_difficult", "unknown")
 
 
 class User(Base):
@@ -81,6 +87,7 @@ class Task(Base):
     # Task sits in the "done" sub-stage of a split stage.
     stage_done: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    complexity: Mapped[str] = mapped_column(String(20), nullable=False, default="normal", server_default="normal")
     created_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
@@ -104,6 +111,27 @@ class ChecklistItem(Base):
     position: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     is_done: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class TaskTransition(Base):
+    """One row per lane a task enters — the history behind flow metrics.
+
+    `backfilled` rows were reconstructed from task timestamps by migration 0008
+    and are approximate (no real start date for cycle time).
+    """
+
+    __tablename__ = "task_transitions"
+    __table_args__ = (Index("ix_task_transitions_project_entered", "project_id", "entered_at"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    project_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    task_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    stage_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("stages.id", ondelete="CASCADE"), nullable=False)
+    stage_done: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    entered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    backfilled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
 
 class ProjectMember(Base):

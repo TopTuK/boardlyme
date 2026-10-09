@@ -2,12 +2,12 @@ import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException, status
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import selectinload
 
 from app.deps import DbDep
 from app.deps import UserDep, get_project_with_role
-from app.models import ChecklistItem, ProjectMember, Stage, Task
+from app.models import ChecklistItem, ProjectMember, Stage, Task, TaskTransition
 from app.schemas import (
     ChecklistItemCreate,
     ChecklistItemUpdate,
@@ -139,6 +139,19 @@ async def _reopen_if_broken(db, task: Task) -> list[Task]:
     return await _apply_move(db, task, work_stage, 10**9)  # append at the end
 
 
+def _record_transition(db, task: Task, at: datetime) -> None:
+    """Log that `task` entered its current (stage, sub-stage) lane — feeds flow metrics."""
+    db.add(
+        TaskTransition(
+            project_id=task.project_id,
+            task_id=task.id,
+            stage_id=task.stage_id,
+            stage_done=bool(task.stage_done),
+            entered_at=at,
+        )
+    )
+
+
 async def _apply_move(db, task: Task, target_stage: Stage, index: int, target_lane: bool = False) -> list[Task]:
     """Move `task` into a (stage, sub-stage) lane at `index`, resequencing positions.
 
@@ -170,13 +183,16 @@ async def _apply_move(db, task: Task, target_stage: Stage, index: int, target_la
             t.position = position
             affected.append(t)
 
+    now = datetime.now(timezone.utc)
     task.stage_id = target_stage.id
     task.stage_done = bool(target_lane) and not target_stage.is_done
     if target_stage.is_done:
         if task.completed_at is None:
-            task.completed_at = datetime.now(timezone.utc)
+            task.completed_at = now
     else:
         task.completed_at = None
+    if not same_lane:
+        _record_transition(db, task, task.completed_at or now)
     return affected
 
 
@@ -208,6 +224,7 @@ async def create_task(project_id: uuid.UUID, body: TaskCreate, user: UserDep, db
     if body.stage_done or not stage.is_backlog:
         raise HTTPException(status_code=400, detail="New tasks can only be created in the Backlog")
 
+    now = datetime.now(timezone.utc)
     task = Task(
         project_id=project_id,
         stage_id=stage.id,
@@ -216,10 +233,14 @@ async def create_task(project_id: uuid.UUID, body: TaskCreate, user: UserDep, db
         description=body.description or None,
         deadline=body.deadline,
         assignee_id=body.assignee_id,
+        complexity=body.complexity,
         position=await _next_position(db, stage.id, False),
         created_by=user.id,
+        created_at=now,
     )
     db.add(task)
+    await db.flush()
+    _record_transition(db, task, now)
     await db.commit()
 
     task_out = await _serialize_task(db, task.id)
@@ -244,6 +265,8 @@ async def update_task(task_id: uuid.UUID, body: TaskUpdate, user: UserDep, db: D
     if "assignee_id" in fields:
         await _assert_assignee_is_member(db, task.project_id, body.assignee_id)
         task.assignee_id = body.assignee_id
+    if "complexity" in fields and body.complexity is not None:
+        task.complexity = body.complexity
     await db.commit()
 
     task_out = await _serialize_task(db, task.id)
@@ -382,6 +405,8 @@ async def delete_task(task_id: uuid.UUID, user: UserDep, db: DbDep):
         raise HTTPException(status_code=404, detail="Task not found")
     await get_project_with_role(db, user, task.project_id)
     project_id = task.project_id
+    # Explicit delete keeps behaviour identical on databases without FK cascades.
+    await db.execute(delete(TaskTransition).where(TaskTransition.task_id == task_id))
     await db.delete(task)
     await db.commit()
     await manager.broadcast(project_id, {"type": "task.deleted", "task_id": str(task_id)})
