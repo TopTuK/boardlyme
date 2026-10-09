@@ -26,12 +26,12 @@ const mock = computed(() => [
   <div class="min-h-screen bg-paper">
     <!-- top bar -->
     <header class="border-b-2 border-ink">
-      <div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
+      <div class="mx-auto flex min-h-16 max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
         <div class="flex items-center gap-2">
           <img src="/icon.png" alt="" width="32" height="32" class="h-8 w-8" />
           <span class="text-base font-black tracking-tight">BOARDLY</span>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center justify-end gap-x-3 gap-y-2">
           <RouterLink
             to="/guide"
             class="font-mono text-[11px] uppercase tracking-widest text-steel hover:text-ink"

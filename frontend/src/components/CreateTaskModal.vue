@@ -23,17 +23,46 @@ const form = reactive({
 })
 const saving = ref(false)
 const titleEl = ref(null)
+const dialogEl = ref(null)
+let previousFocus = null
+
+function focusable() {
+  if (!dialogEl.value) return []
+  return [...dialogEl.value.querySelectorAll('a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])')].filter(
+    (el) => !el.disabled && el.tabIndex !== -1
+  )
+}
 
 function onKeydown(e) {
-  if (e.key === 'Escape') emit('close')
+  if (e.key === 'Escape') {
+    emit('close')
+    return
+  }
+  if (e.key !== 'Tab') return
+  const items = focusable()
+  if (!items.length) return
+  const first = items[0]
+  const last = items[items.length - 1]
+  const active = document.activeElement
+  if (e.shiftKey && (active === first || !dialogEl.value.contains(active))) {
+    e.preventDefault()
+    last.focus()
+  } else if (!e.shiftKey && (active === last || !dialogEl.value.contains(active))) {
+    e.preventDefault()
+    first.focus()
+  }
 }
 
 onMounted(async () => {
+  previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null
   window.addEventListener('keydown', onKeydown)
   await nextTick()
   titleEl.value?.focus()
 })
-onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeydown)
+  previousFocus?.focus()
+})
 
 function assignMe() {
   form.assignee_id = auth.user?.id || ''
@@ -58,15 +87,19 @@ async function submit() {
 <template>
   <div class="fixed inset-0 z-50 flex items-end justify-center bg-ink/50 sm:items-center sm:p-4">
     <form
+      ref="dialogEl"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="create-task-title"
       class="max-h-[92vh] w-full max-w-xl overflow-y-auto border-2 border-ink bg-paper shadow-offset"
       @submit.prevent="submit"
     >
       <header class="flex items-center justify-between border-b-2 border-ink px-4 py-3">
         <div class="flex items-center gap-2">
-          <span class="bg-ink px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-paper">{{ t('task.new') }}</span>
+          <span id="create-task-title" class="bg-ink px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-paper">{{ t('task.new') }}</span>
           <span class="font-mono text-[10px] uppercase tracking-widest text-steel">{{ t('stages.backlog') }}</span>
         </div>
-        <button type="button" class="text-steel hover:text-ink" @click="emit('close')">
+        <button type="button" class="text-steel hover:text-ink" :aria-label="t('common.close')" @click="emit('close')">
           <SvgIcon name="x" :size="14" />
         </button>
       </header>

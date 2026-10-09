@@ -175,8 +175,7 @@ jobs:
                docker pull ${{ env.FRONTEND_IMAGE }}:latest && \
                docker tag ${{ env.FRONTEND_IMAGE }}:latest boardly-frontend:latest && \
                docker compose -f docker-compose.production.yml down --remove-orphans && \
-               docker compose -f docker-compose.production.yml up -d --no-build --force-recreate && \
-               docker image prune -af" && break
+               docker compose -f docker-compose.production.yml up -d --no-build --force-recreate" && break
 
             if [ "$attempt" -ge "$max_attempts" ]; then
               echo "::error::Deploy failed after 5 retries"
@@ -186,6 +185,10 @@ jobs:
             attempt=$((attempt + 1))
             sleep 15
           done
+
+          ssh -p ${{ env.SSH_PORT }} -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ${{ env.SSH_KEY_PATH }} \
+            ${{ secrets.PRODUCTION_SSH_USERNAME }}@${{ secrets.PRODUCTION_SSH_HOST }} \
+            "docker image prune -af" || echo "::warning::Image prune failed; services were already started"
 
       - name: Clean up local secrets
         if: always()

@@ -22,6 +22,7 @@ export default {
     no: 'No',
     deleteQ: 'Delete?',
     dismiss: 'Dismiss',
+    close: 'Close',
     add: 'Add',
   },
   header: {
@@ -94,7 +95,7 @@ export default {
     step2No: 'STEP 02',
     step2Title: 'Shape the flow of tasks',
     step2Text:
-      'The board is yours: add, rename, delete and reorder stages to mirror how work really moves. Cap any stage with a WIP limit to stop overload, or split it into active/done sub-stages. Backlog always stays first, Done stays last and hidden until you toggle “Show done”.',
+      'Regular stages can be renamed, deleted, reordered, given a WIP limit, or split into active/done sub-stages. Backlog and Done cannot be deleted: Backlog stays first and Done stays last, hidden until you toggle “Show done”.',
     step2Fig: 'Fig. 2 — The flow',
     step2Alt: 'A board with columns of cards, one overloaded stack, and a limit plate',
     step3No: 'STEP 03',
