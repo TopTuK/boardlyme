@@ -7,7 +7,7 @@ defineProps({
 
 <template>
   <button
-    class="inline-flex items-center justify-center gap-1.5 px-3 py-2 font-mono text-[11px] uppercase tracking-widest transition-colors disabled:pointer-events-none disabled:opacity-40"
+    class="inline-flex min-h-11 items-center justify-center gap-1.5 px-3 py-2 font-mono text-[11px] uppercase tracking-widest transition-colors disabled:pointer-events-none disabled:opacity-40"
     :class="{
       'bg-ink text-paper hover:bg-signal': variant === 'primary',
       'border border-ink bg-transparent text-ink hover:bg-ink hover:text-paper': variant === 'ghost',

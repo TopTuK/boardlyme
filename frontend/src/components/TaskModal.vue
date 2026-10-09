@@ -100,8 +100,8 @@ function assignMe() {
 </script>
 
 <template>
-  <div class="fixed inset-0 z-50 flex items-end justify-center bg-ink/50 sm:items-center sm:p-4">
-    <div class="max-h-[92vh] w-full max-w-xl overflow-y-auto border-2 border-ink bg-paper shadow-offset">
+  <div class="sheet-overlay">
+    <div class="sheet-panel max-w-xl">
       <header class="flex items-center justify-between border-b-2 border-ink px-4 py-3">
         <div class="flex items-center gap-2">
           <span class="bg-ink px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-paper">{{ t('task.badge') }}</span>

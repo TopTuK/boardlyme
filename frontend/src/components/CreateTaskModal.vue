@@ -88,13 +88,13 @@ async function submit() {
 </script>
 
 <template>
-  <div class="fixed inset-0 z-50 flex items-end justify-center bg-ink/50 sm:items-center sm:p-4">
+  <div class="sheet-overlay">
     <form
       ref="dialogEl"
       role="dialog"
       aria-modal="true"
       aria-labelledby="create-task-title"
-      class="max-h-[92vh] w-full max-w-xl overflow-y-auto border-2 border-ink bg-paper shadow-offset"
+      class="sheet-panel max-w-xl"
       @submit.prevent="submit"
     >
       <header class="flex items-center justify-between border-b-2 border-ink px-4 py-3">

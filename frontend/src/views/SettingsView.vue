@@ -25,7 +25,7 @@ async function choose(code) {
 </script>
 
 <template>
-  <main class="mx-auto max-w-6xl px-4 py-8">
+  <main class="mx-auto max-w-6xl px-4 py-8 safe-px">
     <div class="border-b-2 border-ink pb-4">
       <RouterLink
         to="/boards"
