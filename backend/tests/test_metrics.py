@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 from sqlalchemy import delete, select, update
 
-from app.models import COMPLEXITY_LEVELS, Task, TaskTransition
+from app.models import COMPLEXITY_LEVELS, Project, Task, TaskTransition
 from app.routers.metrics import _duration_stats, _percentile
 
 
@@ -60,6 +60,17 @@ def _set_history(sessionmaker, task: dict, created_at, completed_at, visits, bac
                         backfilled=backfilled_from is not None and i >= backfilled_from,
                     )
                 )
+            await db.commit()
+
+    asyncio.run(_write())
+
+
+def _set_project_created(sessionmaker, project: dict, created_at) -> None:
+    async def _write():
+        async with sessionmaker() as db:
+            await db.execute(
+                update(Project).where(Project.id == uuid.UUID(project["id"])).values(created_at=created_at)
+            )
             await db.commit()
 
     asyncio.run(_write())
@@ -336,3 +347,89 @@ def test_metrics_split_stage_bands(client, make_project, stage_by_name):
     assert body["cfd"][-1]["counts"][f"{active['id']}:done"] == 1
     # A task in the done sub-lane is no longer work in progress.
     assert body["wip"] == 0
+
+
+def test_metrics_report_project_name(client, make_project):
+    project, headers, _ = make_project(name="Home")
+    body = client.get(f"/api/projects/{project['id']}/metrics", headers=headers).json()
+    assert body["project_name"] == "Home"
+
+
+@pytest.mark.parametrize(
+    "params",
+    [{"days": -1}, {"days": 366}, {"tz_offset": 14 * 60 + 1}, {"tz_offset": -14 * 60 - 1}],
+)
+def test_metrics_reject_out_of_range_params(client, make_project, params):
+    project, headers, _ = make_project()
+    response = client.get(f"/api/projects/{project['id']}/metrics", params=params, headers=headers)
+    assert response.status_code == 422
+
+
+def test_metrics_all_time_starts_at_board_creation(client, make_project, sessionmaker):
+    project, headers, _ = make_project()
+    today = datetime.now(timezone.utc).date()
+    _set_project_created(sessionmaker, project, datetime.now(timezone.utc) - timedelta(days=20))
+
+    body = client.get(
+        f"/api/projects/{project['id']}/metrics", params={"days": 0, "tz_offset": 0}, headers=headers
+    ).json()
+
+    assert body["period_start"] == (today - timedelta(days=20)).isoformat()
+    assert body["period_end"] == today.isoformat()
+    assert len(body["cfd"]) == 21
+
+
+def test_metrics_all_time_is_capped_at_a_year(client, make_project, sessionmaker):
+    project, headers, _ = make_project()
+    _set_project_created(sessionmaker, project, datetime.now(timezone.utc) - timedelta(days=500))
+
+    body = client.get(
+        f"/api/projects/{project['id']}/metrics", params={"days": 0, "tz_offset": 0}, headers=headers
+    ).json()
+
+    assert len(body["cfd"]) == 365
+
+
+def test_metrics_days_follow_the_viewer_time_zone(client, make_project, stage_by_name, sessionmaker):
+    """A move at 23:00 UTC belongs to that UTC day, but to the next day at UTC+3."""
+    project, headers, _ = make_project()
+    backlog = stage_by_name(project["id"], headers, "Backlog")
+    todo = stage_by_name(project["id"], headers, "ToDo")
+    today = datetime.now(timezone.utc).date()
+    day = today - timedelta(days=3)
+    midnight = datetime(day.year, day.month, day.day, tzinfo=timezone.utc)
+
+    task = _new_task(client, project, headers)
+    client.post(f"/api/tasks/{task['id']}/move", json={"stage_id": todo["id"], "index": 0}, headers=headers)
+    _set_history(
+        sessionmaker, task, midnight - timedelta(days=2), None,
+        [(backlog["id"], midnight - timedelta(days=2)), (todo["id"], midnight + timedelta(hours=23))],
+    )
+
+    def counts_on(tz_offset: int) -> dict:
+        body = client.get(
+            f"/api/projects/{project['id']}/metrics",
+            params={"days": 14, "tz_offset": tz_offset},
+            headers=headers,
+        ).json()
+        return next(p["counts"] for p in body["cfd"] if p["day"] == day.isoformat())
+
+    # UTC: the move happened before the end of `day`.
+    assert counts_on(0)[todo["id"]] == 1
+    # UTC+3 (getTimezoneOffset() = -180): it is already 02:00 on the next day.
+    at_utc_plus_3 = counts_on(-180)
+    assert at_utc_plus_3[todo["id"]] == 0
+    assert at_utc_plus_3[backlog["id"]] == 1
+
+
+def test_metrics_reopened_task_leaves_lead_time_stats(client, make_project, stage_by_name):
+    project, headers, _ = make_project()
+    todo = stage_by_name(project["id"], headers, "ToDo")
+    task = _new_task(client, project, headers)
+    client.post(f"/api/tasks/{task['id']}/complete", headers=headers)
+    assert client.get(f"/api/projects/{project['id']}/metrics", headers=headers).json()["throughput"] == 1
+
+    client.post(f"/api/tasks/{task['id']}/move", json={"stage_id": todo["id"], "index": 0}, headers=headers)
+    body = client.get(f"/api/projects/{project['id']}/metrics", headers=headers).json()
+    assert body["throughput"] == 0
+    assert body["wip"] == 1

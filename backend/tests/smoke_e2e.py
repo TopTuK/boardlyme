@@ -131,6 +131,56 @@ def main():
     t1_now = next(t for t in board["tasks"] if t["id"] == t1["id"])
     check("merge resets stage_done", t1_now["stage_done"] is False)
 
+    # --- complexity ---
+    check("complexity defaults to normal", t1["complexity"] == "normal")
+    r = c.post(
+        f"/api/projects/{pid}/tasks",
+        json={"title": "Big one", "complexity": "very_difficult"},
+        headers=auth_header(alice["access_token"]),
+    )
+    check("create task with complexity", r.status_code == 201 and r.json()["complexity"] == "very_difficult", r.text)
+    big = r.json()
+    r = c.patch(f"/api/tasks/{big['id']}", json={"complexity": "unknown"}, headers=auth_header(alice["access_token"]))
+    check("update complexity", r.status_code == 200 and r.json()["complexity"] == "unknown")
+    r = c.patch(f"/api/tasks/{big['id']}", json={"complexity": "huge"}, headers=auth_header(alice["access_token"]))
+    check("invalid complexity rejected", r.status_code == 422)
+
+    # --- flow metrics ---
+    c.post(f"/api/tasks/{big['id']}/complete", headers=auth_header(alice["access_token"]))
+    r = c.get(
+        f"/api/projects/{pid}/metrics",
+        params={"days": 30, "tz_offset": -180},
+        headers=auth_header(alice["access_token"]),
+    )
+    check("metrics endpoint", r.status_code == 200, r.text)
+    metrics = r.json()
+    check("metrics project name", metrics["project_name"] == "Smoke Project")
+    check("metrics CFD covers the period", len(metrics["cfd"]) == 30)
+    check(
+        "metrics CFD bands follow the board",
+        [b["name"] for b in metrics["cfd_bands"]] == [s["name"] for s in board["stages"]],
+    )
+    check(
+        "metrics count the completed task",
+        metrics["throughput"] >= 1 and metrics["time_to_market"]["count"] >= 1,
+        str(metrics["throughput"]),
+    )
+    unknown_row = next(row for row in metrics["by_complexity"] if row["complexity"] == "unknown")
+    check("metrics by complexity", unknown_row["completed"] == 1)
+    check(
+        "CFD counts the completed task in Done",
+        metrics["cfd"][-1]["counts"].get(done["id"], 0) >= 1,
+    )
+    check(
+        "metrics reject an out-of-range period",
+        c.get(f"/api/projects/{pid}/metrics", params={"days": 366}, headers=auth_header(alice["access_token"])).status_code
+        == 422,
+    )
+    check(
+        "non-member cannot read metrics",
+        c.get(f"/api/projects/{pid}/metrics", headers=auth_header(bob["access_token"])).status_code == 403,
+    )
+
     # --- sharing ---
     check("bob cannot see alice's board", c.get(f"/api/projects/{pid}", headers=auth_header(bob["access_token"])).status_code == 403)
 
@@ -209,6 +259,14 @@ def main():
     listing = c.get("/api/projects", headers=auth_header(alice["access_token"])).json()
     check("project list with counts", any(p["id"] == pid and p["task_count"] >= 2 for p in listing))
 
+    check(
+        "delete project with active tasks rejected",
+        c.delete(f"/api/projects/{pid}", headers=auth_header(alice["access_token"])).status_code == 409,
+    )
+    board = c.get(f"/api/projects/{pid}", headers=auth_header(alice["access_token"])).json()
+    for task in board["tasks"]:
+        if task["stage_id"] != done["id"]:
+            c.post(f"/api/tasks/{task['id']}/complete", headers=auth_header(alice["access_token"]))
     check("delete project", c.delete(f"/api/projects/{pid}", headers=auth_header(alice["access_token"])).status_code == 204)
     check("project gone", c.get(f"/api/projects/{pid}", headers=auth_header(alice["access_token"])).status_code == 404)
 
