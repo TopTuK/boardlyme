@@ -31,13 +31,27 @@ const mock = computed(() => [
           <img src="/icon.png" alt="" width="32" height="32" class="h-8 w-8" />
           <span class="text-base font-black tracking-tight">BOARDLY</span>
         </div>
-        <RouterLink
-          v-if="!auth.isAuthenticated"
-          to="/login"
-          class="border-2 border-ink px-4 py-2 font-mono text-[11px] uppercase tracking-widest hover:bg-ink hover:text-paper"
-        >
-          {{ t('landing.login') }}
-        </RouterLink>
+        <div class="flex items-center gap-3">
+          <RouterLink
+            to="/guide"
+            class="font-mono text-[11px] uppercase tracking-widest text-steel hover:text-ink"
+          >
+            {{ t('guide.link') }}
+          </RouterLink>
+          <RouterLink
+            to="/about"
+            class="font-mono text-[11px] uppercase tracking-widest text-steel hover:text-ink"
+          >
+            {{ t('about.link') }}
+          </RouterLink>
+          <RouterLink
+            v-if="!auth.isAuthenticated"
+            to="/login"
+            class="border-2 border-ink px-4 py-2 font-mono text-[11px] uppercase tracking-widest hover:bg-ink hover:text-paper"
+          >
+            {{ t('landing.login') }}
+          </RouterLink>
+        </div>
       </div>
     </header>
 

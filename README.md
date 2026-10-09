@@ -3,9 +3,12 @@
 A no-nonsense **personal Kanban board** — on the web and inside a **Telegram Mini App**, with a
 bot that sends you **daily reminders** about active tasks and deadlines.
 
-Projects, custom stages with optional WIP limits, active/done sub-stages, tasks with deadlines,
-a hidden Done stage, and live-shared boards where collaborators assign tasks to themselves.
-Minimalist industrial UI, no passwords: your Telegram identity is the account.
+**Production URL:** <https://taskboard.s-sidorov.ru>
+
+Contexts (one board = one context), custom stages with optional WIP limits, active/done
+sub-stages, tasks with deadlines, a hidden Done stage, and live-shared boards where
+collaborators assign tasks to themselves. Minimalist industrial UI, no passwords: your Telegram
+identity is the account.
 
 ```
 Vue 3 (Vite, Pinia, Tailwind, vuedraggable)  ·  FastAPI (SQLAlchemy 2 async, aiogram)  ·  PostgreSQL 16  ·  Docker
@@ -15,7 +18,7 @@ Vue 3 (Vite, Pinia, Tailwind, vuedraggable)  ·  FastAPI (SQLAlchemy 2 async, ai
 
 ![Landing](docs/screenshots/landing.jpg)
 
-![Projects](docs/screenshots/projects.jpg)
+![Contexts](docs/screenshots/projects.jpg)
 
 ![Board](docs/screenshots/board.jpg)
 
@@ -38,12 +41,12 @@ Vue 3 (Vite, Pinia, Tailwind, vuedraggable)  ·  FastAPI (SQLAlchemy 2 async, ai
 
 | # | Capability | Details |
 |---|------------|---------|
-| 1 | **Projects** | One board per project, created in a click. |
+| 1 | **Contexts** | One board per context, created in a click. |
 | 2 | **Stages** | New boards start with `Backlog` (predefined, always first, cannot be deleted), `ToDo` and `Active`; owners add, rename, delete and reorder stages — `Backlog` is pinned first and `Done` is pinned last, any column in between can be dragged around. Any regular stage can carry a **WIP limit** and can be **split into active/done sub-stages**. |
 | 3 | **Tasks** | Title + description + optional deadline date. Drag & drop between stages and sub-stages. WIP limits are enforced server-side (409 on overflow). |
 | 4 | **Done, hidden** | Completing a task moves it to the `Done` stage, which is hidden by default — toggle **Show done** in the board header. |
 | 5 | **Share & assign** | Owners invite users by Telegram username; every member can assign tasks (to themselves or others). All changes sync live over WebSocket. |
-| 6 | **Reminders** | The bot sends each user one daily digest: active tasks grouped by project + upcoming/overdue deadlines. |
+| 6 | **Reminders** | The bot sends each user one daily digest: active tasks grouped by context + upcoming/overdue deadlines. |
 
 ## 1. Quick start with Docker (no Telegram needed)
 
@@ -402,7 +405,7 @@ boardly/
 ├── frontend/                    # Vue 3 SPA — website AND Telegram Mini App
 │   ├── nginx.conf               # static files + /api proxy + WebSocket upgrade
 │   └── src/
-│       ├── views/               # Landing, Login, Boards (project list), Board (kanban)
+│       ├── views/               # Landing, Login, Guide (how to use), About, Boards (context list), Board (kanban)
 │       ├── components/          # StageColumn, TaskCard, TaskModal, ShareModal, …
 │       ├── stores/              # Pinia: auth, projects, board (+ WS sync + polling fallback)
 │       ├── composables/         # Telegram BackButton wiring
@@ -428,12 +431,13 @@ behavior, and routes straight to the boards.
 ### Data model
 
 - `users` — Telegram identity (`telegram_id`, username, names, photo). Dev users have negative ids.
-- `projects` — owned by a user; sharing happens through `project_members` (roles: `owner`, `editor`).
+- `projects` — a *context* in the UI; owned by a user, sharing happens through `project_members`
+  (roles: `owner`, `editor`).
 - `stages` — ordered columns per project. `Backlog` is flagged `is_backlog` (undeletable,
   always first); `Done` is flagged `is_done` (undeletable, always last) and `is_hidden` by
   default. Regular stages may carry a `wip_limit` and an `is_split` flag dividing them into
   active/done sub-stages.
-- `tasks` — title, description, optional deadline, optional assignee (must be a project
+- `tasks` — title, description, optional deadline, optional assignee (must be a context
   member), position within the (stage, sub-stage) lane, `stage_done` flag, `completed_at`.
 - `reminder_runs` — dedup ledger for the daily digest: one row per (kind, user, day).
 
@@ -452,7 +456,7 @@ shows a `POLL` indicator; polling stops when the socket reconnects.
 
 `app/reminders.py` runs an asyncio loop inside the backend: once per day per user (at
 `REMINDERS_DAILY_TIME` in `REMINDERS_TIMEZONE`) it builds a digest — active tasks grouped by
-project, plus deadlines within `REMINDERS_DEADLINE_DAYS` (overdue always) — and sends it via
+context, plus deadlines within `REMINDERS_DEADLINE_DAYS` (overdue always) — and sends it via
 the Bot API. Deduplication via `reminder_runs`; failed deliveries are retried on the next
 tick; users who never interacted with the bot cannot be messaged (Telegram's rule).
 
@@ -462,7 +466,7 @@ tick; users who never interacted with the bot cannot be messaged (Telegram's rul
 |---------------|---------|
 | `POST /api/auth/telegram/widget` · `/miniapp` · `/dev-login` · `/refresh` | Auth |
 | `GET /api/meta`, `GET /api/health` | Public info |
-| `GET/POST /api/projects`, `GET/PATCH/DELETE /api/projects/{id}`, `POST …/leave` | Projects |
+| `GET/POST /api/projects`, `GET/PATCH/DELETE /api/projects/{id}`, `POST …/leave` | Contexts (the UI term; the resource is called *project* in the API) |
 | `POST /api/projects/{id}/stages`, `PATCH/DELETE /api/stages/{id}`, `PUT …/stages/reorder` | Stages (incl. `wip_limit`, `is_split`) |
 | `POST /api/projects/{id}/tasks`, `PATCH/DELETE /api/tasks/{id}`, `POST …/move` · `/complete` | Tasks (`move` accepts `stage_done` for sub-stages) |
 | `GET/POST /api/projects/{id}/members`, `DELETE …/members/{user_id}`, `GET …/members/search` | Sharing |

@@ -54,6 +54,18 @@ function logout() {
           </button>
         </div>
         <RouterLink
+          to="/guide"
+          class="flex items-center gap-1 border border-transparent px-2 py-1 font-mono text-[11px] uppercase tracking-widest text-steel hover:border-ink hover:text-ink"
+        >
+          <SvgIcon name="lines" :size="12" /> {{ t('guide.link') }}
+        </RouterLink>
+        <RouterLink
+          to="/about"
+          class="flex items-center gap-1 border border-transparent px-2 py-1 font-mono text-[11px] uppercase tracking-widest text-steel hover:border-ink hover:text-ink"
+        >
+          <SvgIcon name="user" :size="12" /> {{ t('about.link') }}
+        </RouterLink>
+        <RouterLink
           to="/settings"
           class="flex items-center gap-1 border border-transparent px-2 py-1 font-mono text-[11px] uppercase tracking-widest text-steel hover:border-ink hover:text-ink"
         >
