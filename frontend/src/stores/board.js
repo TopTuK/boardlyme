@@ -168,11 +168,15 @@ export const useBoardStore = defineStore('board', {
     async createTask(stageId, payload) {
       const title = (typeof payload === 'string' ? payload : payload?.title || '').trim()
       const description = (typeof payload === 'string' ? '' : payload?.description || '').trim()
+      const deadline = typeof payload === 'string' ? null : payload?.deadline || null
+      const assigneeId = typeof payload === 'string' ? null : payload?.assignee_id || null
       if (!title || !this.project) return false
       try {
         const { data } = await api.post(`/projects/${this.project.id}/tasks`, {
           title,
           description: description || null,
+          deadline,
+          assignee_id: assigneeId,
           stage_id: stageId,
         })
         this.applyEvent({ type: 'task.created', task: data })

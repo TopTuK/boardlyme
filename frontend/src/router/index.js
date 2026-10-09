@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import LandingView from '../views/LandingView.vue'
 import LoginView from '../views/LoginView.vue'
+import GuideView from '../views/GuideView.vue'
+import AboutView from '../views/AboutView.vue'
 import BoardsView from '../views/BoardsView.vue'
 import BoardView from '../views/BoardView.vue'
 import SettingsView from '../views/SettingsView.vue'
@@ -11,6 +13,8 @@ const router = createRouter({
   routes: [
     { path: '/', name: 'landing', component: LandingView },
     { path: '/login', name: 'login', component: LoginView },
+    { path: '/guide', name: 'guide', component: GuideView },
+    { path: '/about', name: 'about', component: AboutView },
     { path: '/boards', name: 'boards', component: BoardsView, meta: { app: true, auth: true } },
     { path: '/board/:id', name: 'board', component: BoardView, meta: { app: true, auth: true } },
     { path: '/settings', name: 'settings', component: SettingsView, meta: { app: true, auth: true } },
