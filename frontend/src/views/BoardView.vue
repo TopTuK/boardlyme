@@ -262,6 +262,13 @@ async function openAddStage() {
           {{ store.wsStatus === 'on' ? t('board.live') : store.polling ? t('board.poll') : t('board.offline') }}
         </span>
 
+        <Btn
+          variant="ghost"
+          :title="t('board.metricsTitle')"
+          @click="router.push({ name: 'metrics', params: { id: store.project.id } })"
+        >
+          <SvgIcon name="chart" :size="12" /> {{ t('board.metrics') }}
+        </Btn>
         <Btn v-if="isOwner" variant="ghost" :title="t('board.deleteTitle')" @click="askDeleteProject">
           <SvgIcon name="trash" :size="12" /> {{ t('board.delete') }}
         </Btn>

@@ -6,7 +6,8 @@ bot that sends you **daily reminders** about active tasks and deadlines.
 **Production URL:** <https://taskboard.s-sidorov.ru>
 
 Contexts (one board = one context), custom stages with optional WIP limits, active/done
-sub-stages, tasks with deadlines, a hidden Done stage, and live-shared boards where
+sub-stages, tasks with deadlines and a complexity level, a hidden Done stage, flow metrics
+(cycle time, time to market, cumulative flow diagram), and live-shared boards where
 collaborators assign tasks to themselves. Minimalist industrial UI, no passwords: your Telegram
 identity is the account.
 
@@ -43,10 +44,39 @@ Vue 3 (Vite, Pinia, Tailwind, vuedraggable)  ·  FastAPI (SQLAlchemy 2 async, ai
 |---|------------|---------|
 | 1 | **Contexts** | One board per context, created in a click. |
 | 2 | **Stages** | New boards start with `Backlog` (predefined, always first, cannot be deleted), `ToDo` and `Active`; owners add, rename, delete and reorder stages — `Backlog` is pinned first and `Done` is pinned last, any column in between can be dragged around. Any regular stage can carry a **WIP limit** and can be **split into active/done sub-stages**. |
-| 3 | **Tasks** | Title + description + optional deadline date. Drag & drop between stages and sub-stages. WIP limits are enforced server-side (409 on overflow). |
+| 3 | **Tasks** | Title + description + optional deadline date + **complexity** (see below). Drag & drop between stages and sub-stages. WIP limits are enforced server-side (409 on overflow). |
 | 4 | **Done, hidden** | Completing a task moves it to the `Done` stage, which is hidden by default — toggle **Show done** in the board header. |
 | 5 | **Share & assign** | Owners invite users by Telegram username; every member can assign tasks (to themselves or others). All changes sync live over WebSocket. |
 | 6 | **Reminders** | The bot sends each user one daily digest: active tasks grouped by context + upcoming/overdue deadlines. |
+| 7 | **Flow metrics** | Per context, behind the **Metrics** button in the board header: throughput, tasks in progress, **cycle time** and **time to market** in days (median, average, 85th percentile), a **cumulative flow diagram** with a table view, and a breakdown by complexity. Period: 14 / 30 / 90 days or all time. |
+
+### Task complexity
+
+Every task carries one of six levels, lowest to highest. New tasks default to *Normal*; cards
+show a badge only for the other levels.
+
+| Level (`API value`) | English | Russian |
+|---|---|---|
+| `coffee` | Cup of coffee | Изян |
+| `easy` | Easy | Просто |
+| `normal` | Normal | Нормально |
+| `difficult` | Difficult | Дорого |
+| `very_difficult` | Very difficult | Афигеть дорого |
+| `unknown` | Who knows | ХЗ |
+
+*Who knows* deliberately ranks above *Very difficult*: work nobody can estimate is the
+riskiest kind.
+
+### How the metrics are counted
+
+- **Time to market** — from the moment a task is created to the moment it enters `Done`.
+- **Cycle time** — from the moment a task first leaves `Backlog` to the moment it enters
+  `Done`. Waiting in the backlog doesn't count; going back to the backlog later doesn't reset it.
+- Both are measured over the tasks completed within the selected period, in days.
+- **Cumulative flow diagram** — for every day of the period, how many tasks sat in each stage
+  at the end of that day (in the viewer's time zone). `Done` is drawn at the bottom and
+  `Backlog` on top; a split stage contributes two bands (active and done). A band that keeps
+  widening shows where work piles up.
 
 ## 1. Quick start with Docker (no Telegram needed)
 
@@ -405,15 +435,15 @@ boardly/
 ├── frontend/                    # Vue 3 SPA — website AND Telegram Mini App
 │   ├── nginx.conf               # static files + /api proxy + WebSocket upgrade
 │   └── src/
-│       ├── views/               # Landing, Login, Guide (how to use), About, Boards (context list), Board (kanban)
-│       ├── components/          # StageColumn, TaskCard, TaskModal, ShareModal, …
+│       ├── views/               # Landing, Login, Guide (how to use), About, Boards (context list), Board (kanban), Metrics
+│       ├── components/          # StageColumn, TaskCard, TaskModal, ShareModal, CfdChart, …
 │       ├── stores/              # Pinia: auth, projects, board (+ WS sync + polling fallback)
 │       ├── composables/         # Telegram BackButton wiring
 │       └── lib/                 # axios client w/ auto-refresh, Telegram bridge, formatting
 └── backend/                     # FastAPI application
     ├── app/
-    │   ├── routers/             # auth, projects, stages, tasks, members, ws
-    │   ├── models.py            # users, projects, stages, tasks, project_members, reminder_runs
+    │   ├── routers/             # auth, projects, stages, tasks, members, metrics, ws
+    │   ├── models.py            # users, projects, stages, tasks, task_transitions, project_members, reminder_runs
     │   ├── telegram.py          # Telegram signature verification (widget + initData)
     │   ├── telegram_bot.py      # shared aiogram Bot client (outgoing messages)
     │   ├── security.py          # JWT issue/verify
@@ -438,7 +468,12 @@ behavior, and routes straight to the boards.
   default. Regular stages may carry a `wip_limit` and an `is_split` flag dividing them into
   active/done sub-stages.
 - `tasks` — title, description, optional deadline, optional assignee (must be a context
-  member), position within the (stage, sub-stage) lane, `stage_done` flag, `completed_at`.
+  member), position within the (stage, sub-stage) lane, `stage_done` flag, `completed_at`,
+  `complexity` (required, default `normal`).
+- `task_transitions` — one row each time a task enters a (stage, sub-stage) lane: on create,
+  move, complete and checklist reopen; reorders within a lane are not logged. This history
+  feeds cycle time and the CFD. Rows flagged `backfilled` were reconstructed by migration
+  `0008` for tasks that existed before the log.
 - `reminder_runs` — dedup ledger for the daily digest: one row per (kind, user, day).
 
 ### Live sync
@@ -468,7 +503,8 @@ tick; users who never interacted with the bot cannot be messaged (Telegram's rul
 | `GET /api/meta`, `GET /api/health` | Public info |
 | `GET/POST /api/projects`, `GET/PATCH/DELETE /api/projects/{id}`, `POST …/leave` | Contexts (the UI term; the resource is called *project* in the API) |
 | `POST /api/projects/{id}/stages`, `PATCH/DELETE /api/stages/{id}`, `PUT …/stages/reorder` | Stages (incl. `wip_limit`, `is_split`) |
-| `POST /api/projects/{id}/tasks`, `PATCH/DELETE /api/tasks/{id}`, `POST …/move` · `/complete` | Tasks (`move` accepts `stage_done` for sub-stages) |
+| `POST /api/projects/{id}/tasks`, `PATCH/DELETE /api/tasks/{id}`, `POST …/move` · `/complete` | Tasks (`move` accepts `stage_done` for sub-stages; create/patch accept `complexity`) |
+| `GET /api/projects/{id}/metrics?days=30&tz_offset=-180` | Flow metrics. `days`: 1–365, or `0` for since the context was created. `tz_offset`: the browser's `getTimezoneOffset()`, sets day boundaries |
 | `GET/POST /api/projects/{id}/members`, `DELETE …/members/{user_id}`, `GET …/members/search` | Sharing |
 | `WS /api/ws/projects/{id}?token=…` | Live board events |
 
@@ -496,6 +532,12 @@ Interactive docs (native run): http://localhost:8000/docs
 - Signature freshness (`auth_date`) is not strictly enforced; JWTs are the session boundary.
 - The UI ships a fixed light "industrial" theme by design, including inside the Mini App.
 - One digest per day per user; per-task intermediate reminders (e.g. hourly) are future work.
+- Metrics history for tasks created before migration `0008` is approximate: each task is
+  assumed to have entered `Backlog` when it was created, its current stage at its last update,
+  and `Done` when it was completed. Those completed tasks count toward time to market but
+  are left out of cycle time, because their real start date is unknown.
+- Deleting a stage also removes the history of visits to it, so the CFD always follows the
+  board's current layout.
 
 ## License
 

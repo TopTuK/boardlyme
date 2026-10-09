@@ -6,7 +6,7 @@ from sqlalchemy.orm import selectinload
 
 from app.deps import DbDep
 from app.deps import UserDep, get_project_with_role
-from app.models import Project, ProjectMember, Stage, Task
+from app.models import Project, ProjectMember, Stage, Task, TaskTransition
 from app.schemas import BoardOut, MemberOut, ProjectCreate, ProjectOut, ProjectUpdate
 from app.ws import manager
 
@@ -190,6 +190,7 @@ async def delete_project(project_id: uuid.UUID, user: UserDep, db: DbDep):
     await manager.broadcast(project_id, {"type": "project.deleted", "project_id": str(project_id)})
     await manager.close_room(project_id)
     # Explicit deletes keep behaviour identical on databases without FK cascades.
+    await db.execute(delete(TaskTransition).where(TaskTransition.project_id == project_id))
     await db.execute(delete(Task).where(Task.project_id == project_id))
     await db.execute(delete(Stage).where(Stage.project_id == project_id))
     await db.execute(delete(ProjectMember).where(ProjectMember.project_id == project_id))

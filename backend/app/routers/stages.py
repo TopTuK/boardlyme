@@ -5,7 +5,7 @@ from sqlalchemy import delete, func, select
 
 from app.deps import DbDep
 from app.deps import UserDep, get_project_with_role
-from app.models import Stage, Task
+from app.models import Stage, Task, TaskTransition
 from app.schemas import StageCreate, StageOut, StageReorderIn, StageUpdate
 from app.ws import manager
 
@@ -133,6 +133,14 @@ async def delete_stage(stage_id: uuid.UUID, user: UserDep, db: DbDep):
 
     project_id = stage.project_id
     # Explicit delete keeps behaviour identical on databases without FK cascades.
+    # History goes with the stage: its tasks' transitions, plus any other task's
+    # past visits to this stage (the row would point at a missing stage).
+    stage_task_ids = select(Task.id).where(Task.stage_id == stage_id)
+    await db.execute(
+        delete(TaskTransition).where(
+            (TaskTransition.task_id.in_(stage_task_ids)) | (TaskTransition.stage_id == stage_id)
+        )
+    )
     await db.execute(delete(Task).where(Task.stage_id == stage_id))
     await db.delete(stage)
     await db.commit()

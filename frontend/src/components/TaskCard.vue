@@ -2,6 +2,7 @@
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { deadlineState, displayName, fmtDeadline, initials } from '../lib/format'
+import { COMPLEXITY_LEVELS, DEFAULT_COMPLEXITY, complexityLabel } from '../lib/complexity'
 
 const props = defineProps({
   task: { type: Object, required: true },
@@ -29,7 +30,16 @@ const checklistDone = computed(() => checklist.value.filter((i) => i.is_done).le
 const checklistAllDone = computed(
   () => checklist.value.length > 0 && checklistDone.value === checklist.value.length
 )
-const hasMeta = computed(() => !!(props.task.deadline || props.task.assignee || checklist.value.length))
+// "Normal" is the default — only call out tasks that deviate from it.
+const complexity = computed(() =>
+  props.task.complexity && props.task.complexity !== DEFAULT_COMPLEXITY ? props.task.complexity : ''
+)
+const complexityHeavy = computed(
+  () => COMPLEXITY_LEVELS.indexOf(complexity.value) > COMPLEXITY_LEVELS.indexOf('difficult')
+)
+const hasMeta = computed(
+  () => !!(props.task.deadline || props.task.assignee || checklist.value.length || complexity.value)
+)
 
 watch(
   () => [props.task.title, props.task.description],
@@ -160,6 +170,14 @@ function finish() {
         class="card-grip flex h-7 cursor-grab items-center gap-2 px-2.5 active:cursor-grabbing"
         @click="$emit('open')"
       >
+        <span
+          v-if="complexity"
+          class="border px-1 font-mono text-[9px] uppercase leading-4 tracking-wide"
+          :class="complexityHeavy ? 'border-ink font-bold text-ink' : 'border-line text-steel'"
+          :title="t('task.complexity')"
+        >
+          {{ complexityLabel(complexity) }}
+        </span>
         <span
           v-if="checklist.length"
           class="flex items-center gap-1 font-mono text-[10px] font-medium uppercase tabular-nums"

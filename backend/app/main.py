@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.reminders import run_reminder_loop
-from app.routers import auth, members, meta, projects, stages, tasks, ws
+from app.routers import auth, members, meta, metrics, projects, stages, tasks, ws
 from app.telegram_bot import close_bot
 
 
@@ -41,6 +41,7 @@ app.include_router(projects.router)
 app.include_router(stages.router)
 app.include_router(tasks.router)
 app.include_router(members.router)
+app.include_router(metrics.router)
 app.include_router(ws.router)
 
 

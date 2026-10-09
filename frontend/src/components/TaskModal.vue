@@ -5,6 +5,7 @@ import { useAuthStore } from '../stores/auth'
 import { useBoardStore } from '../stores/board'
 import { deadlineState, memberName } from '../lib/format'
 import { stageName } from '../lib/messages'
+import { COMPLEXITY_LEVELS, DEFAULT_COMPLEXITY, complexityLabel } from '../lib/complexity'
 
 const props = defineProps({
   task: { type: Object, required: true },
@@ -27,6 +28,7 @@ const form = reactive({
   description: props.task.description || '',
   deadline: props.task.deadline || '',
   assignee_id: props.task.assignee_id || '',
+  complexity: props.task.complexity || DEFAULT_COMPLEXITY,
 })
 const saving = ref(false)
 const confirmDelete = ref(false)
@@ -66,6 +68,7 @@ async function save() {
     description: form.description.trim() || null,
     deadline: form.deadline || null,
     assignee_id: form.assignee_id || null,
+    complexity: form.complexity,
   })
   saving.value = false
   if (ok) emit('close')
@@ -227,6 +230,16 @@ function assignMe() {
             </button>
           </label>
         </div>
+
+        <label class="block">
+          <span class="mb-1 block font-mono text-[10px] uppercase tracking-widest text-steel">{{ t('task.complexity') }}</span>
+          <select
+            v-model="form.complexity"
+            class="w-full border border-line bg-white px-3 py-2 text-sm outline-none focus:border-ink sm:w-1/2"
+          >
+            <option v-for="level in COMPLEXITY_LEVELS" :key="level" :value="level">{{ complexityLabel(level) }}</option>
+          </select>
+        </label>
       </div>
 
       <footer class="flex flex-wrap items-center justify-between gap-2 border-t-2 border-ink px-4 py-3">
