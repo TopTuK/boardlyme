@@ -47,25 +47,73 @@ const auth = useAuthStore()
     <!-- steps -->
     <section class="border-b-2 border-ink">
       <div class="mx-auto max-w-6xl space-y-6 px-4 py-14">
-        <article class="grid gap-4 border-2 border-ink bg-white p-6 shadow-offset sm:grid-cols-[auto_1fr] sm:p-8">
-          <span class="font-mono text-2xl font-black text-signal">{{ t('guide.step1No') }}</span>
-          <div>
-            <h2 class="text-lg font-black uppercase tracking-tight">{{ t('guide.step1Title') }}</h2>
-            <p class="mt-3 max-w-2xl text-[13px] leading-relaxed text-steel">{{ t('guide.step1Text') }}</p>
+        <article class="border-2 border-ink bg-white shadow-offset">
+          <div class="grid lg:grid-cols-2 lg:items-center">
+            <div class="grid gap-4 p-6 sm:grid-cols-[auto_1fr] sm:p-8">
+              <span class="font-mono text-2xl font-black text-signal">{{ t('guide.step1No') }}</span>
+              <div>
+                <h2 class="text-lg font-black uppercase tracking-tight">{{ t('guide.step1Title') }}</h2>
+                <p class="mt-3 text-[13px] leading-relaxed text-steel">{{ t('guide.step1Text') }}</p>
+              </div>
+            </div>
+            <figure class="relative border-t-2 border-ink lg:border-l-2 lg:border-t-0">
+              <img
+                src="/guide-context.jpg"
+                :alt="t('guide.step1Alt')"
+                width="1600"
+                height="1073"
+                class="aspect-[3/2] w-full object-cover"
+              />
+              <figcaption class="absolute left-3 top-3 bg-paper px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-steel">
+                {{ t('guide.step1Fig') }}
+              </figcaption>
+            </figure>
           </div>
         </article>
-        <article class="grid gap-4 border-2 border-ink bg-white p-6 shadow-offset sm:grid-cols-[auto_1fr] sm:p-8">
-          <span class="font-mono text-2xl font-black text-signal">{{ t('guide.step2No') }}</span>
-          <div>
-            <h2 class="text-lg font-black uppercase tracking-tight">{{ t('guide.step2Title') }}</h2>
-            <p class="mt-3 max-w-2xl text-[13px] leading-relaxed text-steel">{{ t('guide.step2Text') }}</p>
+        <article class="border-2 border-ink bg-white shadow-offset">
+          <div class="grid lg:grid-cols-2 lg:items-center">
+            <div class="grid gap-4 p-6 sm:grid-cols-[auto_1fr] sm:p-8">
+              <span class="font-mono text-2xl font-black text-signal">{{ t('guide.step2No') }}</span>
+              <div>
+                <h2 class="text-lg font-black uppercase tracking-tight">{{ t('guide.step2Title') }}</h2>
+                <p class="mt-3 text-[13px] leading-relaxed text-steel">{{ t('guide.step2Text') }}</p>
+              </div>
+            </div>
+            <figure class="relative border-t-2 border-ink lg:border-l-2 lg:border-t-0">
+              <img
+                src="/guide-flow.jpg"
+                :alt="t('guide.step2Alt')"
+                width="1600"
+                height="1073"
+                class="aspect-[3/2] w-full object-cover"
+              />
+              <figcaption class="absolute left-3 top-3 bg-paper px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-steel">
+                {{ t('guide.step2Fig') }}
+              </figcaption>
+            </figure>
           </div>
         </article>
-        <article class="grid gap-4 border-2 border-ink bg-white p-6 shadow-offset sm:grid-cols-[auto_1fr] sm:p-8">
-          <span class="font-mono text-2xl font-black text-signal">{{ t('guide.step3No') }}</span>
-          <div>
-            <h2 class="text-lg font-black uppercase tracking-tight">{{ t('guide.step3Title') }}</h2>
-            <p class="mt-3 max-w-2xl text-[13px] leading-relaxed text-steel">{{ t('guide.step3Text') }}</p>
+        <article class="border-2 border-ink bg-white shadow-offset">
+          <div class="grid lg:grid-cols-2 lg:items-center">
+            <div class="grid gap-4 p-6 sm:grid-cols-[auto_1fr] sm:p-8">
+              <span class="font-mono text-2xl font-black text-signal">{{ t('guide.step3No') }}</span>
+              <div>
+                <h2 class="text-lg font-black uppercase tracking-tight">{{ t('guide.step3Title') }}</h2>
+                <p class="mt-3 text-[13px] leading-relaxed text-steel">{{ t('guide.step3Text') }}</p>
+              </div>
+            </div>
+            <figure class="relative border-t-2 border-ink lg:border-l-2 lg:border-t-0">
+              <img
+                src="/guide-tasks.jpg"
+                :alt="t('guide.step3Alt')"
+                width="1600"
+                height="1073"
+                class="aspect-[3/2] w-full object-cover"
+              />
+              <figcaption class="absolute left-3 top-3 bg-paper px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-steel">
+                {{ t('guide.step3Fig') }}
+              </figcaption>
+            </figure>
           </div>
         </article>
       </div>

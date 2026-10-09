@@ -77,11 +77,6 @@ function onChange(evt, lane) {
   if (evt.added) emit('move', evt.added.element.id, evt.added.newIndex, lane)
   else if (evt.moved) emit('move', evt.moved.element.id, evt.moved.newIndex, lane)
 }
-
-function addTask(payload) {
-  if (!payload?.title?.trim()) return
-  emit('add-task', payload)
-}
 </script>
 
 <template>
@@ -295,7 +290,13 @@ function addTask(payload) {
     </div>
 
     <footer v-if="stage.is_backlog" class="border-t border-line p-2">
-      <TaskCard composing @create="addTask" />
+      <button
+        type="button"
+        class="w-full border border-dashed border-ink/25 py-2 font-mono text-[10px] uppercase tracking-widest text-steel hover:border-ink hover:text-ink"
+        @click="$emit('add-task')"
+      >
+        {{ t('stage.addTask') }}
+      </button>
     </footer>
   </section>
 </template>

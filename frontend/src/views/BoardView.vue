@@ -7,6 +7,7 @@ import { useBoardStore } from '../stores/board'
 import { initials, memberName } from '../lib/format'
 import { displayError, stageName } from '../lib/messages'
 import draggable from 'vuedraggable'
+import CreateTaskModal from '../components/CreateTaskModal.vue'
 import StageColumn from '../components/StageColumn.vue'
 import TaskModal from '../components/TaskModal.vue'
 import ShareModal from '../components/ShareModal.vue'
@@ -19,6 +20,7 @@ const auth = useAuthStore()
 const { t } = useI18n()
 
 const activeTaskId = ref(null)
+const createOpen = ref(false)
 const shareOpen = ref(false)
 const confirmState = ref(null)
 const renaming = ref(false)
@@ -309,7 +311,7 @@ async function openAddStage() {
             @update-task="(task, patch) => store.updateTask(task.id, patch)"
             @rename="(name) => store.updateStage(stage.id, { name })"
             @delete="askDeleteStage(stage)"
-            @add-task="(payload) => store.createTask(stage.id, payload)"
+            @add-task="createOpen = true"
             @set-wip="(value) => store.setWipLimit(stage.id, value)"
             @toggle-split="(value) => store.toggleSplit(stage.id, value)"
           />
@@ -338,6 +340,7 @@ async function openAddStage() {
       </div>
     </div>
 
+    <CreateTaskModal v-if="createOpen" :members="store.members" @close="createOpen = false" />
     <TaskModal
       v-if="activeTask"
       :task="activeTask"

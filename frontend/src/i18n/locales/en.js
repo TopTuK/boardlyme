@@ -89,14 +89,20 @@ export default {
     step1Title: 'Create a context',
     step1Text:
       'Open the contexts page and hit “New context”. Give it a name — “Work”, “Home”, “Renovation”. Every context gets its own board with four stages out of the box: Backlog, ToDo, Active and Done.',
+    step1Fig: 'Fig. 1 — Three contexts',
+    step1Alt: 'Three separate boards in a workshop, one orange card on the middle board',
     step2No: 'STEP 02',
     step2Title: 'Shape the flow of tasks',
     step2Text:
       'The board is yours: add, rename, delete and reorder stages to mirror how work really moves. Cap any stage with a WIP limit to stop overload, or split it into active/done sub-stages. Backlog always stays first, Done stays last and hidden until you toggle “Show done”.',
+    step2Fig: 'Fig. 2 — The flow',
+    step2Alt: 'A board with columns of cards, one overloaded stack, and a limit plate',
     step3No: 'STEP 03',
     step3Title: 'Add tasks and control dates & states',
     step3Text:
       'New tasks land in the Backlog. Give them a deadline, drag them along the stages as they progress — overdue dates flag themselves in red. Complete a task and it moves to Done, out of sight but one toggle away. A daily Telegram digest keeps deadlines from slipping.',
+    step3Fig: 'Fig. 3 — Deadlines',
+    step3Alt: 'Index cards, a calendar with one date circled, and a folded daily note',
     openApp: 'Open the app →',
     back: '← Back',
   },
@@ -123,6 +129,7 @@ export default {
     authorBio:
       'Moscow-based project professional with 14+ years on flagship IT products — from system analyst to project lead, most of that journey at Kaspersky Lab. Teaches project management through his own online school, builds his own products and learning platforms, and plays bass guitar in the KAVer cover band. Boardly is his answer to messy personal to-do lists.',
     authorCta: 's-sidorov.ru — personal page',
+    back: '← Back',
   },
   login: {
     access: 'Access Control',
@@ -194,6 +201,7 @@ export default {
   },
   task: {
     badge: 'Task',
+    new: 'New',
     done: 'Done',
     stageDone: 'Stage done',
     title: 'Title *',
