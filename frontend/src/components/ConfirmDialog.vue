@@ -14,13 +14,14 @@ const { t } = useI18n()
 <template>
   <div class="sheet-overlay z-[60]" @click.self="emit('cancel')">
     <div class="sheet-panel max-w-sm" role="dialog" aria-modal="true">
-      <header class="border-b-2 border-ink px-4 py-3 font-mono text-xs font-bold uppercase tracking-widest">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <header class="sheet-head font-mono text-xs font-bold uppercase tracking-widest">
         {{ title }}
       </header>
-      <p class="px-4 py-4 text-sm leading-relaxed text-steel">{{ message }}</p>
-      <footer class="flex justify-end gap-2 border-t border-line px-4 py-3">
-        <Btn variant="ghost" @click="emit('cancel')">{{ t('common.cancel') }}</Btn>
-        <Btn variant="danger" @click="emit('confirm')">{{ confirmLabel || t('common.delete') }}</Btn>
+      <p class="sheet-body text-sm leading-relaxed text-steel">{{ message }}</p>
+      <footer class="sheet-foot sm:justify-end">
+        <Btn class="w-full sm:w-auto" variant="ghost" @click="emit('cancel')">{{ t('common.cancel') }}</Btn>
+        <Btn class="w-full sm:w-auto" variant="danger" @click="emit('confirm')">{{ confirmLabel || t('common.delete') }}</Btn>
       </footer>
     </div>
   </div>

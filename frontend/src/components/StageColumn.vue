@@ -292,10 +292,10 @@ function onChange(evt, lane) {
     <footer v-if="stage.is_backlog" class="border-t border-line p-2">
       <button
         type="button"
-        class="w-full border border-dashed border-ink/25 py-2 font-mono text-[10px] uppercase tracking-widest text-steel hover:border-ink hover:text-ink"
+        class="flex w-full items-center justify-center gap-1.5 border border-dashed border-ink/25 py-2.5 font-mono text-[10px] uppercase tracking-widest text-steel hover:border-ink hover:text-ink"
         @click="$emit('add-task')"
       >
-        {{ t('stage.addTask') }}
+        <SvgIcon name="plus" :size="11" /> {{ t('stage.addTask') }}
       </button>
     </footer>
   </section>

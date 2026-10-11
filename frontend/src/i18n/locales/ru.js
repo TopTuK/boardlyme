@@ -194,7 +194,8 @@ export default {
     deleteProjectMessage:
       'Контекст «{name}» будет удалён вместе со всеми задачами, а участники потеряют доступ. Это нельзя отменить.',
     stageName: 'НАЗВАНИЕ КОЛОНКИ',
-    addStage: '+ Добавить колонку',
+    addStage: 'Добавить колонку',
+    addStageTitle: 'Добавить на доску новую колонку-станцию',
     deleteStageTitle: 'Удалить колонку «{name}»',
     deleteStageMessage: 'Все задачи в «{name}» удалятся вместе с ней. Это нельзя отменить.',
     leaveTitle: 'Покинуть контекст',
@@ -220,7 +221,7 @@ export default {
     active: 'В работе',
     done: 'Готово',
     empty: 'Нет элементов',
-    addTask: '+ ЗАДАЧА',
+    addTask: 'ЗАДАЧА',
     more: 'Действия со станцией',
   },
   task: {

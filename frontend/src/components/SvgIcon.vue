@@ -25,6 +25,7 @@ const PATHS = {
   clock:'M8 14A6 6 0 108 2a6 6 0 000 12zM8 5v3l2 2',
   settings: 'M8 6.2a1.8 1.8 0 100 3.6 1.8 1.8 0 000-3.6zM8 1.5v1.6M8 12.9v1.6M1.5 8h1.6M12.9 8h1.6M3.2 3.2l1.2 1.2M11.6 11.6l1.2 1.2M12.8 3.2l-1.2 1.2M4.4 11.6l-1.2 1.2',
   more: 'M8 2.5v2M8 7v2M8 11.5v2',
+  column: 'M3 3h10v10H3zM8 3v10',
 }
 
 const d = computed(() => PATHS[props.name] || '')

@@ -371,12 +371,12 @@ const wsLabel = computed(() =>
         :stages="store.visibleStages"
         :active-id="activeStageId"
         :counts="stageCounts"
-        :can-add="isOwner"
         @select="selectStation"
-        @add="openAddStage"
       />
 
-      <div v-if="addingStage" class="flex gap-2 border-b border-line bg-paper px-3 py-2">
+      <div v-if="addingStage" class="flex items-center gap-2 border-b border-line bg-paper px-3 py-2">
+        <SvgIcon name="column" :size="12" class="shrink-0 text-steel" />
+        <span class="shrink-0 font-mono text-[9px] uppercase tracking-widest text-steel">{{ t('board.addStage') }}</span>
         <input
           id="new-stage-input"
           v-model="newStageName"
@@ -428,30 +428,32 @@ const wsLabel = computed(() =>
         <Btn class="flex-1" @click="createOpen = true">
           <SvgIcon name="plus" :size="12" /> {{ t('stage.addTask') }}
         </Btn>
-        <OverflowMenu
-          v-if="isOwner && activeStage && !activeStage.is_done"
-          :label="t('stage.more')"
-        >
+        <OverflowMenu v-if="isOwner && activeStage" :label="t('stage.more')">
           <template #default="{ close }">
-            <button type="button" class="menu-item" @click="(close(), beginStageRename())">
-              <SvgIcon name="pencil" :size="12" /> {{ t('stage.rename') }}
+            <button type="button" class="menu-item" @click="(close(), openAddStage())">
+              <SvgIcon name="column" :size="12" /> {{ t('board.addStage') }}
             </button>
-            <template v-if="!activeStage.is_backlog">
-              <button type="button" class="menu-item" :disabled="!canMoveStage(activeStage, -1)" @click="(close(), moveStage(activeStage, -1))">
-                <SvgIcon name="left" :size="12" /> {{ t('stage.moveLeft') }}
+            <template v-if="!activeStage.is_done">
+              <button type="button" class="menu-item" @click="(close(), beginStageRename())">
+                <SvgIcon name="pencil" :size="12" /> {{ t('stage.rename') }}
               </button>
-              <button type="button" class="menu-item" :disabled="!canMoveStage(activeStage, 1)" @click="(close(), moveStage(activeStage, 1))">
-                <SvgIcon name="right" :size="12" /> {{ t('stage.moveRight') }}
-              </button>
-              <button type="button" class="menu-item" @click="(close(), beginStageWip())">
-                {{ t('stage.wip') }}
-              </button>
-              <button type="button" class="menu-item" @click="(close(), store.toggleSplit(activeStage.id, !activeStage.is_split))">
-                {{ activeStage.is_split ? t('stage.merge') : t('stage.split') }}
-              </button>
-              <button type="button" class="menu-item" @click="(close(), askDeleteStage(activeStage))">
-                <SvgIcon name="trash" :size="12" /> {{ t('stage.delete') }}
-              </button>
+              <template v-if="!activeStage.is_backlog">
+                <button type="button" class="menu-item" :disabled="!canMoveStage(activeStage, -1)" @click="(close(), moveStage(activeStage, -1))">
+                  <SvgIcon name="left" :size="12" /> {{ t('stage.moveLeft') }}
+                </button>
+                <button type="button" class="menu-item" :disabled="!canMoveStage(activeStage, 1)" @click="(close(), moveStage(activeStage, 1))">
+                  <SvgIcon name="right" :size="12" /> {{ t('stage.moveRight') }}
+                </button>
+                <button type="button" class="menu-item" @click="(close(), beginStageWip())">
+                  {{ t('stage.wip') }}
+                </button>
+                <button type="button" class="menu-item" @click="(close(), store.toggleSplit(activeStage.id, !activeStage.is_split))">
+                  {{ activeStage.is_split ? t('stage.merge') : t('stage.split') }}
+                </button>
+                <button type="button" class="menu-item" @click="(close(), askDeleteStage(activeStage))">
+                  <SvgIcon name="trash" :size="12" /> {{ t('stage.delete') }}
+                </button>
+              </template>
             </template>
           </template>
         </OverflowMenu>
@@ -581,7 +583,7 @@ const wsLabel = computed(() =>
           </template>
         </draggable>
 
-        <div v-if="isOwner" class="w-64 shrink-0 border border-dashed border-ink/15 bg-[#F7F6F1] p-3 sm:w-72">
+        <div v-if="isOwner" class="flex w-64 shrink-0 flex-col border border-dashed border-ink/25 bg-[#F7F6F1] p-3 sm:w-72">
           <input
             v-if="addingStage"
             id="new-stage-input"
@@ -594,9 +596,12 @@ const wsLabel = computed(() =>
           />
           <button
             v-else
-            class="w-full border border-dashed border-steel/60 py-2 font-mono text-[10px] uppercase tracking-widest text-steel hover:border-ink hover:text-ink"
+            type="button"
+            class="flex flex-1 flex-col items-center justify-center gap-3 border border-dashed border-steel/60 p-4 font-mono text-[10px] uppercase tracking-widest text-steel transition-colors hover:border-ink hover:bg-white hover:text-ink"
+            :title="t('board.addStageTitle')"
             @click="openAddStage"
           >
+            <SvgIcon name="column" :size="24" />
             {{ t('board.addStage') }}
           </button>
         </div>
