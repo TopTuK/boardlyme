@@ -16,10 +16,10 @@ jobs:
       DEV_FAKE_AUTH: "1"
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
@@ -42,20 +42,20 @@ jobs:
       packages: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Log in to Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.TOKEN }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Build and push backend
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./backend
           file: ./backend/Dockerfile
@@ -65,7 +65,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=backend
 
       - name: Build and push frontend
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./frontend
           file: ./frontend/Dockerfile
@@ -85,7 +85,7 @@ jobs:
       DEPLOY_PATH: boardly
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Validate deploy secrets
         run: |
@@ -159,32 +159,71 @@ jobs:
             docker-compose.production.yml ${{ env.ENV_FILE_PATH }} \
             ${{ secrets.PRODUCTION_SSH_USERNAME }}@${{ secrets.PRODUCTION_SSH_HOST }}:${{ env.DEPLOY_PATH }}/
 
-      - name: Deploy on PROD server
+      - name: Log in to Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.TOKEN }}
+
+      - name: Pull images on the runner
         run: |
           attempt=1
           max_attempts=6
           while true; do
-            ssh -p ${{ env.SSH_PORT }} -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ${{ env.SSH_KEY_PATH }} \
-              ${{ secrets.PRODUCTION_SSH_USERNAME }}@${{ secrets.PRODUCTION_SSH_HOST }} \
-              "cd ${{ env.DEPLOY_PATH }} && \
-               if [ -f production.env ]; then mv production.env .env; fi && \
-               chmod 600 .env && \
-               docker login ${{ env.REGISTRY }} -u ${{ github.actor }} -p ${{ secrets.TOKEN }} && \
-               docker pull ${{ env.BACKEND_IMAGE }}:latest && \
-               docker tag ${{ env.BACKEND_IMAGE }}:latest boardly-backend:latest && \
-               docker pull ${{ env.FRONTEND_IMAGE }}:latest && \
-               docker tag ${{ env.FRONTEND_IMAGE }}:latest boardly-frontend:latest && \
-               docker compose -f docker-compose.production.yml down --remove-orphans && \
-               docker compose -f docker-compose.production.yml up -d --no-build --force-recreate" && break
+            docker pull ${{ env.BACKEND_IMAGE }}:latest && \
+            docker pull ${{ env.FRONTEND_IMAGE }}:latest && break
 
             if [ "$attempt" -ge "$max_attempts" ]; then
-              echo "::error::Deploy failed after 5 retries"
+              echo "::error::Image pull failed after 5 retries"
               exit 1
             fi
-            echo "Deploy failed. Retry ${attempt}/5 in 15s..."
+            echo "Image pull failed. Retry ${attempt}/5 in 15s..."
             attempt=$((attempt + 1))
             sleep 15
           done
+
+      - name: Deploy on PROD server
+        run: |
+          # The VPS times out during the TLS handshake to ghcr.io. That happens
+          # before any certificate is checked, so an insecure registry would not
+          # help. Load the images over SSH from this runner instead.
+          ssh_base=(
+            -p "${{ env.SSH_PORT }}"
+            -o StrictHostKeyChecking=no
+            -o IdentitiesOnly=yes
+            -o ServerAliveInterval=30
+            -o ServerAliveCountMax=120
+            -i "${{ env.SSH_KEY_PATH }}"
+          )
+          target="${{ secrets.PRODUCTION_SSH_USERNAME }}@${{ secrets.PRODUCTION_SSH_HOST }}"
+
+          attempt=1
+          max_attempts=6
+          while true; do
+            docker save \
+              "${{ env.BACKEND_IMAGE }}:latest" \
+              "${{ env.FRONTEND_IMAGE }}:latest" \
+            | gzip -1 \
+            | ssh "${ssh_base[@]}" "$target" "gunzip | docker load" && break
+
+            if [ "$attempt" -ge "$max_attempts" ]; then
+              echo "::error::Image transfer failed after 5 retries"
+              exit 1
+            fi
+            echo "Image transfer failed. Retry ${attempt}/5 in 15s..."
+            attempt=$((attempt + 1))
+            sleep 15
+          done
+
+          ssh "${ssh_base[@]}" "$target" \
+            "docker tag ${{ env.BACKEND_IMAGE }}:latest boardly-backend:latest && \
+             docker tag ${{ env.FRONTEND_IMAGE }}:latest boardly-frontend:latest && \
+             cd ${{ env.DEPLOY_PATH }} && \
+             if [ -f production.env ]; then mv production.env .env; fi && \
+             chmod 600 .env && \
+             docker compose -f docker-compose.production.yml down --remove-orphans && \
+             docker compose -f docker-compose.production.yml up -d --no-build --force-recreate"
 
           ssh -p ${{ env.SSH_PORT }} -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ${{ env.SSH_KEY_PATH }} \
             ${{ secrets.PRODUCTION_SSH_USERNAME }}@${{ secrets.PRODUCTION_SSH_HOST }} \
