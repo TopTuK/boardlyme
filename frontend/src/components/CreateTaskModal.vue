@@ -97,17 +97,23 @@ async function submit() {
       class="sheet-panel max-w-xl"
       @submit.prevent="submit"
     >
-      <header class="flex items-center justify-between border-b-2 border-ink px-4 py-3">
-        <div class="flex items-center gap-2">
-          <span id="create-task-title" class="bg-ink px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-paper">{{ t('task.new') }}</span>
-          <span class="font-mono text-[10px] uppercase tracking-widest text-steel">{{ t('stages.backlog') }}</span>
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <header class="sheet-head">
+        <div class="flex min-w-0 items-center gap-2">
+          <span id="create-task-title" class="shrink-0 bg-ink px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-paper">{{ t('task.new') }}</span>
+          <span class="truncate font-mono text-[10px] uppercase tracking-widest text-steel">{{ t('stages.backlog') }}</span>
         </div>
-        <button type="button" class="text-steel hover:text-ink" :aria-label="t('common.close')" @click="emit('close')">
+        <button
+          type="button"
+          class="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center text-steel hover:text-ink"
+          :aria-label="t('common.close')"
+          @click="emit('close')"
+        >
           <SvgIcon name="x" :size="14" />
         </button>
       </header>
 
-      <div class="space-y-4 p-4">
+      <div class="sheet-body space-y-4">
         <label class="block">
           <span class="mb-1 block font-mono text-[10px] uppercase tracking-widest text-steel">{{ t('task.title') }}</span>
           <input
@@ -115,7 +121,7 @@ async function submit() {
             v-model="form.title"
             maxlength="500"
             :placeholder="t('task.titlePh')"
-            class="w-full border-2 border-ink bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-signal"
+            class="w-full border-2 border-ink bg-white px-3 py-2.5 text-sm font-semibold outline-none focus:border-signal"
           />
         </label>
 
@@ -126,7 +132,7 @@ async function submit() {
             rows="4"
             maxlength="10000"
             :placeholder="t('task.descriptionPh')"
-            class="w-full border border-line bg-white px-3 py-2 text-sm outline-none focus:border-ink"
+            class="w-full border border-line bg-white px-3 py-2.5 text-sm outline-none focus:border-ink"
           ></textarea>
         </label>
 
@@ -136,7 +142,7 @@ async function submit() {
             <input
               v-model="form.deadline"
               type="date"
-              class="w-full border border-line bg-white px-3 py-2 font-mono text-xs outline-none focus:border-ink"
+              class="w-full border border-line bg-white px-3 py-2.5 font-mono text-sm outline-none focus:border-ink"
             />
           </label>
 
@@ -144,7 +150,7 @@ async function submit() {
             <span class="mb-1 block font-mono text-[10px] uppercase tracking-widest text-steel">{{ t('task.assignee') }}</span>
             <select
               v-model="form.assignee_id"
-              class="w-full border border-line bg-white px-3 py-2 text-sm outline-none focus:border-ink"
+              class="w-full border border-line bg-white px-3 py-2.5 text-sm outline-none focus:border-ink"
             >
               <option value="">{{ t('task.unassigned') }}</option>
               <option v-for="m in members" :key="m.user_id" :value="m.user_id">{{ memberName(m) }}</option>
@@ -163,16 +169,16 @@ async function submit() {
           <span class="mb-1 block font-mono text-[10px] uppercase tracking-widest text-steel">{{ t('task.complexity') }}</span>
           <select
             v-model="form.complexity"
-            class="w-full border border-line bg-white px-3 py-2 text-sm outline-none focus:border-ink sm:w-1/2"
+            class="w-full border border-line bg-white px-3 py-2.5 text-sm outline-none focus:border-ink sm:w-1/2"
           >
             <option v-for="level in COMPLEXITY_LEVELS" :key="level" :value="level">{{ complexityLabel(level) }}</option>
           </select>
         </label>
       </div>
 
-      <footer class="flex items-center justify-end gap-2 border-t-2 border-ink px-4 py-3">
-        <Btn variant="ghost" type="button" @click="emit('close')">{{ t('common.cancel') }}</Btn>
-        <Btn type="submit" :disabled="saving || !form.title.trim()">{{ t('common.create') }}</Btn>
+      <footer class="sheet-foot">
+        <Btn class="w-full sm:w-auto" variant="ghost" type="button" @click="emit('close')">{{ t('common.cancel') }}</Btn>
+        <Btn class="w-full sm:w-auto" type="submit" :disabled="saving || !form.title.trim()">{{ t('common.create') }}</Btn>
       </footer>
     </form>
   </div>

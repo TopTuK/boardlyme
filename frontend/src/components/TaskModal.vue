@@ -102,35 +102,40 @@ function assignMe() {
 <template>
   <div class="sheet-overlay">
     <div class="sheet-panel max-w-xl">
-      <header class="flex items-center justify-between border-b-2 border-ink px-4 py-3">
-        <div class="flex items-center gap-2">
-          <span class="bg-ink px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-paper">{{ t('task.badge') }}</span>
-          <span class="font-mono text-[10px] uppercase tracking-widest text-steel">{{ stageName(stage) }}</span>
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <header class="sheet-head">
+        <div class="flex min-w-0 flex-wrap items-center gap-2">
+          <span class="shrink-0 bg-ink px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-paper">{{ t('task.badge') }}</span>
+          <span class="truncate font-mono text-[10px] uppercase tracking-widest text-steel">{{ stageName(stage) }}</span>
           <span
             v-if="done"
-            class="bg-signal px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-white"
+            class="shrink-0 bg-signal px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-white"
           >
             {{ t('task.done') }}
           </span>
           <span
             v-else-if="inStageDone"
-            class="border border-steel px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-steel"
+            class="shrink-0 border border-steel px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-steel"
           >
             {{ t('task.stageDone') }}
           </span>
         </div>
-        <button class="text-steel hover:text-ink" @click="emit('close')">
+        <button
+          class="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center text-steel hover:text-ink"
+          :aria-label="t('common.close')"
+          @click="emit('close')"
+        >
           <SvgIcon name="x" :size="14" />
         </button>
       </header>
 
-      <div class="space-y-4 p-4">
+      <div class="sheet-body space-y-4">
         <label class="block">
           <span class="mb-1 block font-mono text-[10px] uppercase tracking-widest text-steel">{{ t('task.title') }}</span>
           <input
             v-model="form.title"
             maxlength="500"
-            class="w-full border-2 border-ink bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-signal"
+            class="w-full border-2 border-ink bg-white px-3 py-2.5 text-sm font-semibold outline-none focus:border-signal"
           />
         </label>
 
@@ -141,7 +146,7 @@ function assignMe() {
             rows="4"
             maxlength="10000"
             :placeholder="t('task.descriptionPh')"
-            class="w-full border border-line bg-white px-3 py-2 text-sm outline-none focus:border-ink"
+            class="w-full border border-line bg-white px-3 py-2.5 text-sm outline-none focus:border-ink"
           ></textarea>
         </label>
 
@@ -165,7 +170,7 @@ function assignMe() {
             >
               <button
                 type="button"
-                class="flex h-4 w-4 shrink-0 items-center justify-center border-2 transition-colors"
+                class="flex h-6 w-6 shrink-0 items-center justify-center border-2 transition-colors sm:h-4 sm:w-4"
                 :class="item.is_done ? 'border-ink bg-ink text-paper' : 'border-ink/40 bg-white hover:border-signal'"
                 :title="item.is_done ? t('task.uncheckItem') : t('task.checkItem')"
                 @click="toggleItem(item)"
@@ -178,7 +183,7 @@ function assignMe() {
               >{{ item.content }}</span>
               <button
                 type="button"
-                class="flex h-5 w-5 shrink-0 items-center justify-center text-steel opacity-100 transition-opacity hover:text-[#C92A2A] focus-visible:opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/item:opacity-100 [@media(hover:hover)]:focus-visible:opacity-100"
+                class="flex h-8 w-8 shrink-0 items-center justify-center text-steel transition-colors hover:text-[#C92A2A] focus-visible:opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/item:opacity-100"
                 :title="t('common.delete')"
                 @click="removeItem(item)"
               >
@@ -191,7 +196,7 @@ function assignMe() {
             v-model="newItem"
             maxlength="500"
             :placeholder="t('task.addChecklistItem')"
-            class="mt-1 w-full border border-dashed border-ink/25 bg-white px-3 py-1.5 text-[13px] outline-none placeholder:text-steel/50 focus:border-solid focus:border-ink"
+            class="mt-1 w-full border border-dashed border-ink/25 bg-white px-3 py-2 text-[13px] outline-none placeholder:text-steel/50 focus:border-solid focus:border-ink"
             @keydown.enter.prevent="addItem"
           />
         </div>
@@ -202,7 +207,7 @@ function assignMe() {
             <input
               v-model="form.deadline"
               type="date"
-              class="w-full border border-line bg-white px-3 py-2 font-mono text-xs outline-none focus:border-ink"
+              class="w-full border border-line bg-white px-3 py-2.5 font-mono text-sm outline-none focus:border-ink"
             />
             <span
               v-if="form.deadline && deadlineState(form.deadline) === 'overdue'"
@@ -216,7 +221,7 @@ function assignMe() {
             <span class="mb-1 block font-mono text-[10px] uppercase tracking-widest text-steel">{{ t('task.assignee') }}</span>
             <select
               v-model="form.assignee_id"
-              class="w-full border border-line bg-white px-3 py-2 text-sm outline-none focus:border-ink"
+              class="w-full border border-line bg-white px-3 py-2.5 text-sm outline-none focus:border-ink"
             >
               <option value="">{{ t('task.unassigned') }}</option>
               <option v-for="m in members" :key="m.user_id" :value="m.user_id">{{ memberName(m) }}</option>
@@ -235,45 +240,47 @@ function assignMe() {
           <span class="mb-1 block font-mono text-[10px] uppercase tracking-widest text-steel">{{ t('task.complexity') }}</span>
           <select
             v-model="form.complexity"
-            class="w-full border border-line bg-white px-3 py-2 text-sm outline-none focus:border-ink sm:w-1/2"
+            class="w-full border border-line bg-white px-3 py-2.5 text-sm outline-none focus:border-ink sm:w-1/2"
           >
             <option v-for="level in COMPLEXITY_LEVELS" :key="level" :value="level">{{ complexityLabel(level) }}</option>
           </select>
         </label>
       </div>
 
-      <footer class="flex flex-wrap items-center justify-between gap-2 border-t-2 border-ink px-4 py-3">
-        <div class="flex items-center gap-2">
+      <footer class="sheet-foot">
+        <div class="flex flex-wrap items-center gap-2">
           <template v-if="confirmDelete">
             <span class="font-mono text-[10px] uppercase text-[#C92A2A]">{{ t('common.deleteQ') }}</span>
             <Btn variant="danger" @click="remove">{{ t('common.yesDelete') }}</Btn>
             <Btn variant="ghost" @click="confirmDelete = false">{{ t('common.no') }}</Btn>
           </template>
-          <Btn v-else variant="danger" @click="confirmDelete = true">
+          <Btn v-else variant="danger" class="w-full sm:w-auto" @click="confirmDelete = true">
             <SvgIcon name="trash" :size="11" /> {{ t('common.delete') }}
           </Btn>
         </div>
-        <div class="ml-auto flex flex-wrap items-center gap-2">
+        <div class="flex flex-col gap-2 sm:ml-auto sm:flex-row sm:flex-wrap sm:items-center">
           <Btn
             v-if="stageSplit && !done && !inStageDone"
             variant="ghost"
+            class="w-full sm:w-auto"
             :title="t('task.stageDoneTitle')"
             @click="markStageDone"
           >
             <SvgIcon name="check" :size="11" /> {{ t('task.stageDone') }}
           </Btn>
-          <Btn v-if="inStageDone && !done" variant="ghost" @click="backToStageActive">{{ t('task.backActive') }}</Btn>
+          <Btn v-if="inStageDone && !done" variant="ghost" class="w-full sm:w-auto" @click="backToStageActive">{{ t('task.backActive') }}</Btn>
           <Btn
             v-if="!done"
+            class="w-full sm:w-auto"
             :disabled="checklist.length > 0 && !checklistOpen"
             :title="checklist.length > 0 && !checklistOpen ? t('task.checklistBlockedTitle') : t('task.completeTitle')"
             @click="complete"
           >
             <SvgIcon name="check" :size="11" /> {{ t('task.complete') }}
           </Btn>
-          <Btn v-else variant="ghost" @click="reopen">{{ t('task.reopen') }}</Btn>
-          <Btn variant="ghost" @click="emit('close')">{{ t('common.cancel') }}</Btn>
-          <Btn :disabled="saving || !form.title.trim()" @click="save">{{ t('common.save') }}</Btn>
+          <Btn v-else variant="ghost" class="w-full sm:w-auto" @click="reopen">{{ t('task.reopen') }}</Btn>
+          <Btn variant="ghost" class="w-full sm:w-auto" @click="emit('close')">{{ t('common.cancel') }}</Btn>
+          <Btn class="w-full sm:w-auto" :disabled="saving || !form.title.trim()" @click="save">{{ t('common.save') }}</Btn>
         </div>
       </footer>
     </div>

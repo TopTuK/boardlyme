@@ -194,7 +194,8 @@ export default {
     deleteProjectMessage:
       'Context “{name}” will be deleted with all of its tasks and every member will lose access. This cannot be undone.',
     stageName: 'STAGE NAME',
-    addStage: '+ Add stage',
+    addStage: 'Add stage',
+    addStageTitle: 'Add a new stage column to this board',
     deleteStageTitle: 'Delete stage “{name}”',
     deleteStageMessage: 'All tasks currently in “{name}” will be deleted with it. This cannot be undone.',
     leaveTitle: 'Leave context',
@@ -220,7 +221,7 @@ export default {
     active: 'Active',
     done: 'Done',
     empty: 'No items',
-    addTask: '+ ADD TASK',
+    addTask: 'ADD TASK',
     more: 'Station actions',
   },
   task: {

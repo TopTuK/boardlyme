@@ -83,7 +83,7 @@ const auth = useAuthStore()
       <div class="mx-auto max-w-6xl px-4 py-14">
         <h2 class="border-b border-line pb-4 text-2xl font-black tracking-tight">{{ t('about.authorTitle') }}</h2>
         <div class="mt-8 flex flex-col gap-6 border-2 border-ink bg-white p-6 shadow-offset sm:flex-row sm:p-8">
-          <div class="flex h-20 w-20 shrink-0 items-center justify-center border-2 border-ink bg-paper font-mono text-2xl font-black">
+          <div class="flex h-20 w-20 shrink-0 items-center justify-center border-2 border-ink bg-paper font-mono text-2xl font-bold">
             SS
           </div>
           <div>

@@ -81,7 +81,7 @@ const metricTerms = computed(() =>
         <article class="border-2 border-ink bg-white shadow-offset">
           <div class="grid lg:grid-cols-2 lg:items-center">
             <div class="grid gap-4 p-6 sm:grid-cols-[auto_1fr] sm:p-8">
-              <span class="font-mono text-2xl font-black text-signal">{{ t('guide.step1No') }}</span>
+              <span class="font-mono text-2xl font-bold text-signal">{{ t('guide.step1No') }}</span>
               <div>
                 <h2 class="text-lg font-black uppercase tracking-tight">{{ t('guide.step1Title') }}</h2>
                 <p class="mt-3 text-[13px] leading-relaxed text-steel">{{ t('guide.step1Text') }}</p>
@@ -104,7 +104,7 @@ const metricTerms = computed(() =>
         <article class="border-2 border-ink bg-white shadow-offset">
           <div class="grid lg:grid-cols-2 lg:items-center">
             <div class="grid gap-4 p-6 sm:grid-cols-[auto_1fr] sm:p-8">
-              <span class="font-mono text-2xl font-black text-signal">{{ t('guide.step2No') }}</span>
+              <span class="font-mono text-2xl font-bold text-signal">{{ t('guide.step2No') }}</span>
               <div>
                 <h2 class="text-lg font-black uppercase tracking-tight">{{ t('guide.step2Title') }}</h2>
                 <p class="mt-3 text-[13px] leading-relaxed text-steel">{{ t('guide.step2Text') }}</p>
@@ -127,7 +127,7 @@ const metricTerms = computed(() =>
         <article class="border-2 border-ink bg-white shadow-offset">
           <div class="grid lg:grid-cols-2 lg:items-center">
             <div class="grid gap-4 p-6 sm:grid-cols-[auto_1fr] sm:p-8">
-              <span class="font-mono text-2xl font-black text-signal">{{ t('guide.step3No') }}</span>
+              <span class="font-mono text-2xl font-bold text-signal">{{ t('guide.step3No') }}</span>
               <div>
                 <h2 class="text-lg font-black uppercase tracking-tight">{{ t('guide.step3Title') }}</h2>
                 <p class="mt-3 text-[13px] leading-relaxed text-steel">{{ t('guide.step3Text') }}</p>
@@ -150,7 +150,7 @@ const metricTerms = computed(() =>
         <article class="border-2 border-ink bg-white shadow-offset">
           <div class="grid lg:grid-cols-2 lg:items-center">
             <div class="grid gap-4 p-6 sm:grid-cols-[auto_1fr] sm:p-8">
-              <span class="font-mono text-2xl font-black text-signal">{{ t('guide.step4No') }}</span>
+              <span class="font-mono text-2xl font-bold text-signal">{{ t('guide.step4No') }}</span>
               <div>
                 <h2 class="text-lg font-black uppercase tracking-tight">{{ t('guide.step4Title') }}</h2>
                 <p class="mt-3 text-[13px] leading-relaxed text-steel">{{ t('guide.step4Text') }}</p>

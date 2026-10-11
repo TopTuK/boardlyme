@@ -38,17 +38,22 @@ onBeforeUnmount(() => {
 <template>
   <div class="sheet-overlay">
     <div class="sheet-panel max-w-lg">
-      <header class="flex items-center justify-between border-b-2 border-ink px-4 py-3">
-        <div class="flex items-center gap-2">
-          <span class="bg-ink px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-paper">{{ t('share.badge') }}</span>
-          <span class="truncate text-sm font-black uppercase">{{ board.project?.name }}</span>
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <header class="sheet-head">
+        <div class="flex min-w-0 items-center gap-2">
+          <span class="shrink-0 bg-ink px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-paper">{{ t('share.badge') }}</span>
+          <span class="truncate text-sm font-bold uppercase tracking-tight">{{ board.project?.name }}</span>
         </div>
-        <button class="text-steel hover:text-ink" @click="emit('close')">
+        <button
+          class="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center text-steel hover:text-ink"
+          :aria-label="t('common.close')"
+          @click="emit('close')"
+        >
           <SvgIcon name="x" :size="14" />
         </button>
       </header>
 
-      <div class="space-y-5 p-4">
+      <div class="sheet-body space-y-5">
         <!-- current members -->
         <section>
           <h3 class="mb-2 font-mono text-[10px] uppercase tracking-widest text-steel">
@@ -82,7 +87,7 @@ onBeforeUnmount(() => {
           <input
             v-model="query"
             :placeholder="t('share.search')"
-            class="w-full border-2 border-ink bg-white px-3 py-2 font-mono text-xs uppercase outline-none focus:border-signal"
+            class="w-full border-2 border-ink bg-white px-3 py-2.5 font-mono text-sm uppercase outline-none focus:border-signal"
             @input="onInput"
           />
 

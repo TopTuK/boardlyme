@@ -11,8 +11,8 @@ export default {
         steel: '#6E6E66',
       },
       fontFamily: {
-        sans: ['Archivo', 'system-ui', 'Segoe UI', 'Roboto', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+        sans: ['Inter', 'system-ui', 'Segoe UI', 'Roboto', 'sans-serif'],
+        mono: ['"IBM Plex Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
       boxShadow: {
         offset: '4px 4px 0 0 #161616',
