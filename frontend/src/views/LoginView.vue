@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { startGoogleAuth } from '../lib/google'
 import { displayError } from '../lib/messages'
 
 const { t } = useI18n()
@@ -43,6 +44,11 @@ function mountWidget() {
   widgetHost.value.appendChild(script)
 }
 
+function loginGoogle() {
+  const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : ''
+  startGoogleAuth(auth.meta.google_client_id, { mode: 'login', redirect })
+}
+
 onMounted(async () => {
   const query = window.location.search
   if (query.includes('hash=') && query.includes('id=')) {
@@ -80,6 +86,14 @@ onMounted(async () => {
           >
             {{ t('login.inactive') }}
           </p>
+          <Btn
+            v-if="auth.meta?.google_client_id"
+            class="mt-3 w-full"
+            :disabled="busy"
+            @click="loginGoogle"
+          >
+            {{ t('login.google') }}
+          </Btn>
         </section>
 
         <!-- Telegram Mini App retry -->

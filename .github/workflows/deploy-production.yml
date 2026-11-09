@@ -141,6 +141,8 @@ jobs:
             echo "JWT_SECRET=${{ secrets.JWT_SECRET }}"
             echo "BOT_TOKEN=${{ secrets.BOT_TOKEN }}"
             echo "BOT_USERNAME=${{ secrets.BOT_USERNAME }}"
+            echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}"
+            echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}"
             echo "APP_URL=${{ secrets.APP_URL }}"
             echo "REMINDERS_ENABLED=1"
             echo "REMINDERS_DAILY_TIME=09:00"

@@ -25,12 +25,15 @@ class UserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
-    telegram_id: int
+    telegram_id: int | None = None
     username: str | None = None
     first_name: str | None = None
     last_name: str | None = None
     photo_url: str | None = None
+    email: str | None = None
     locale: str = "en"
+    telegram_linked: bool = False
+    google_linked: bool = False
 
 
 class UserSettingsIn(BaseModel):
@@ -47,6 +50,13 @@ class WidgetAuthIn(BaseModel):
     """Raw query string sent back by the Telegram Login Widget."""
 
     data: str
+
+
+class GoogleAuthIn(BaseModel):
+    """Authorization code from the Google consent-screen redirect."""
+
+    code: str
+    redirect_uri: str
 
 
 class MiniAppAuthIn(BaseModel):

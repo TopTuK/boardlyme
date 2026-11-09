@@ -101,6 +101,27 @@ export const useAuthStore = defineStore('auth', {
       this._setSession(data)
     },
 
+    async loginGoogle(code) {
+      const redirect_uri = `${window.location.origin}/auth/signin-google`
+      const { data } = await api.post('/auth/google', { code, redirect_uri })
+      this._setSession(data)
+    },
+
+    async linkGoogle(code) {
+      const redirect_uri = `${window.location.origin}/auth/signin-google`
+      const { data } = await api.post('/auth/google/link', { code, redirect_uri })
+      this.user = data
+      this._persist()
+      return data
+    },
+
+    async linkTelegram(dataStr) {
+      const { data } = await api.post('/auth/telegram/link', { data: dataStr })
+      this.user = data
+      this._persist()
+      return data
+    },
+
     async devLogin(username) {
       const { data } = await api.post('/auth/dev-login', { username })
       this._setSession(data)

@@ -8,12 +8,14 @@ import BoardsView from '../views/BoardsView.vue'
 import BoardView from '../views/BoardView.vue'
 import MetricsView from '../views/MetricsView.vue'
 import SettingsView from '../views/SettingsView.vue'
+import GoogleCallbackView from '../views/GoogleCallbackView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', name: 'landing', component: LandingView },
     { path: '/login', name: 'login', component: LoginView },
+    { path: '/auth/signin-google', name: 'google-callback', component: GoogleCallbackView },
     { path: '/guide', name: 'guide', component: GuideView },
     { path: '/about', name: 'about', component: AboutView },
     { path: '/boards', name: 'boards', component: BoardsView, meta: { app: true, auth: true } },
