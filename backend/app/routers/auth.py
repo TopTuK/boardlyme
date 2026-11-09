@@ -80,7 +80,11 @@ async def _login_with_telegram_payload(db, raw: str, *, webapp: bool) -> TokenPa
 
 @router.post("/telegram/widget", response_model=TokenPair)
 async def widget_login(body: WidgetAuthIn, db: DbDep) -> TokenPair:
-    """Exchange a Telegram Login Widget redirect payload for app tokens."""
+    """Exchange a Telegram Login Widget redirect payload for app tokens.
+
+    Legacy: kept for the migration window so Telegram-only users can still
+    sign in and link a Google account. Google is the primary sign-in.
+    """
     return await _login_with_telegram_payload(db, body.data, webapp=False)
 
 
@@ -187,7 +191,10 @@ async def link_telegram(body: WidgetAuthIn, user: UserDep, db: DbDep) -> UserOut
 
 @router.post("/telegram/miniapp", response_model=TokenPair)
 async def miniapp_login(body: MiniAppAuthIn, db: DbDep) -> TokenPair:
-    """Exchange Telegram Mini App `initData` for app tokens."""
+    """Exchange Telegram Mini App `initData` for app tokens.
+
+    Legacy: kept for the migration window (Mini App auto-login).
+    """
     return await _login_with_telegram_payload(db, body.init_data, webapp=True)
 
 

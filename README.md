@@ -293,7 +293,14 @@ native BackButton.
 ### 3.5 What each artifact enables (auth & reminder flows)
 
 ```
-Website login   browser → Telegram Login Widget (needs BOT_USERNAME + registered domain)
+Website login   browser → Google consent screen (needs GOOGLE_CLIENT_ID/SECRET
+                + registered redirect URI <APP_URL>/auth/signin-google)
+                → redirect to /auth/signin-google with an authorization code
+                → POST /api/auth/google → code exchanged server-side,
+                  id_token verified against Google's JWKS → JWT
+
+Legacy login    browser → Telegram Login Widget (kept for the migration window;
+                needs BOT_USERNAME + registered domain)
                 → redirect to /login with a signed payload
                 → POST /api/auth/telegram/widget → verified against BOT_TOKEN → JWT
 
@@ -301,8 +308,13 @@ Mini App        user opens the app from the bot (needs artifact 3)
                 → webview loads your site → window.Telegram.WebApp.initData
                 → POST /api/auth/telegram/miniapp → verified against BOT_TOKEN → JWT
 
+Linking         signed-in user → Settings → "Linked accounts"
+                → POST /api/auth/google/link or /api/auth/telegram/link
+                → both identities then open the same account (409 on conflict)
+
 Reminders       scheduler (backend) → aiogram sendMessage via BOT_TOKEN → user's Telegram chat
-                (only users who have interacted with the bot at least once)
+                (only users with a linked Telegram account who have interacted
+                with the bot at least once)
 ```
 
 ## 4. Testing the Telegram flows locally
