@@ -60,6 +60,19 @@ def test_google_login_rejects_bad_code(client, google_settings, mock_exchange):
     assert client.post("/api/auth/google", json=_google_payload()).status_code == 401
 
 
+def test_google_login_reports_502_when_google_unreachable(client, google_settings, monkeypatch):
+    import app.routers.auth as auth_router
+    from app.google import GoogleUnavailableError
+
+    async def failing_exchange(code, redirect_uri):
+        raise GoogleUnavailableError("connection timed out")
+
+    monkeypatch.setattr(auth_router, "exchange_code", failing_exchange)
+    response = client.post("/api/auth/google", json=_google_payload())
+    assert response.status_code == 502
+    assert response.json()["detail"] == "Google is unreachable from the server"
+
+
 def test_google_login_creates_user(client, google_settings, mock_exchange):
     response = client.post("/api/auth/google", json=_google_payload())
     assert response.status_code == 200

@@ -1,4 +1,5 @@
 import hashlib
+import logging
 
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
@@ -6,7 +7,7 @@ from sqlalchemy import select
 from app.config import settings
 from app.deps import DbDep
 from app.deps import UserDep
-from app.google import exchange_code
+from app.google import GoogleUnavailableError, exchange_code
 from app.models import User
 from app.schemas import (
     DevLoginIn,
@@ -22,6 +23,8 @@ from app.security import create_token_pair, decode_token
 from app.telegram import extract_telegram_user, verify_telegram_query
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
+
+logger = logging.getLogger(__name__)
 
 
 def _token_pair(user: User) -> TokenPair:
@@ -91,7 +94,11 @@ async def widget_login(body: WidgetAuthIn, db: DbDep) -> TokenPair:
 async def _verified_google_claims(body: GoogleAuthIn) -> dict:
     if not settings.google_client_id or not settings.google_client_secret:
         raise HTTPException(status_code=503, detail="Google sign-in is not configured")
-    claims = await exchange_code(body.code, body.redirect_uri)
+    try:
+        claims = await exchange_code(body.code, body.redirect_uri)
+    except GoogleUnavailableError as exc:
+        logger.warning("Google OAuth exchange failed: %s", exc)
+        raise HTTPException(status_code=502, detail="Google is unreachable from the server") from exc
     if claims is None:
         raise HTTPException(status_code=401, detail="Invalid Google authorization code")
     return claims
