@@ -379,6 +379,7 @@ export default {
     notMember: 'Вы не участник этого контекста',
     ownerOnly: 'Это может сделать только владелец контекста',
     googleNotConfigured: 'Вход через Google не настроен',
+    googleUnreachable: 'Сервер не может достучаться до Google — попробуй позже',
     badGoogleCode: 'Не удалось войти через Google — попробуй ещё раз',
     googleLinkedOther: 'Этот Google-аккаунт привязан к другому пользователю',
     telegramLinkedOther: 'Этот Telegram-аккаунт привязан к другому пользователю',

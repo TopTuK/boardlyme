@@ -44,6 +44,7 @@ const API_KEYS = {
   'You are not a member of this project': 'api.notMember',
   'Only the project owner can do this': 'api.ownerOnly',
   'Google sign-in is not configured': 'api.googleNotConfigured',
+  'Google is unreachable from the server': 'api.googleUnreachable',
   'Invalid Google authorization code': 'api.badGoogleCode',
   'This Google account is linked to another user': 'api.googleLinkedOther',
   'This Telegram account is linked to another user': 'api.telegramLinkedOther',

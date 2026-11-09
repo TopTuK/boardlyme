@@ -379,6 +379,7 @@ export default {
     notMember: 'You are not a member of this context',
     ownerOnly: 'Only the context owner can do this',
     googleNotConfigured: 'Google sign-in is not configured',
+    googleUnreachable: 'Google is unreachable from the server — try again later',
     badGoogleCode: 'Google sign-in failed — try again',
     googleLinkedOther: 'This Google account is linked to another user',
     telegramLinkedOther: 'This Telegram account is linked to another user',

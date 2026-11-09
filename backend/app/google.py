@@ -11,6 +11,10 @@ GOOGLE_JWKS_URL = "https://www.googleapis.com/oauth2/v3/certs"
 _jwks_client: jwt.PyJWKClient | None = None
 
 
+class GoogleUnavailableError(Exception):
+    """Google endpoints could not be reached (or answered garbage) server-side."""
+
+
 def _jwks() -> jwt.PyJWKClient:
     global _jwks_client
     if _jwks_client is None:
@@ -24,20 +28,26 @@ async def exchange_code(code: str, redirect_uri: str) -> dict | None:
     Returns the decoded (unverified) `id_token` claims on success, None when
     Google rejects the exchange.
     """
-    async with httpx.AsyncClient(timeout=10) as client:
-        resp = await client.post(
-            GOOGLE_TOKEN_URL,
-            data={
-                "code": code,
-                "client_id": settings.google_client_id,
-                "client_secret": settings.google_client_secret,
-                "redirect_uri": redirect_uri,
-                "grant_type": "authorization_code",
-            },
-        )
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.post(
+                GOOGLE_TOKEN_URL,
+                data={
+                    "code": code,
+                    "client_id": settings.google_client_id,
+                    "client_secret": settings.google_client_secret,
+                    "redirect_uri": redirect_uri,
+                    "grant_type": "authorization_code",
+                },
+            )
+    except httpx.HTTPError as exc:
+        raise GoogleUnavailableError(f"token endpoint unreachable: {exc}") from exc
     if resp.status_code != 200:
         return None
-    id_token = resp.json().get("id_token")
+    try:
+        id_token = resp.json().get("id_token")
+    except ValueError as exc:
+        raise GoogleUnavailableError("token endpoint returned a non-JSON response") from exc
     if not id_token:
         return None
     return verify_id_token(id_token)
@@ -47,6 +57,11 @@ def verify_id_token(id_token: str) -> dict | None:
     """Verify a Google ID token against Google's JWKS. Returns claims or None."""
     try:
         signing_key = _jwks().get_signing_key_from_jwt(id_token)
+    except jwt.PyJWKClientError as exc:
+        raise GoogleUnavailableError(f"JWKS fetch failed: {exc}") from exc
+    except jwt.PyJWTError:
+        return None
+    try:
         claims = jwt.decode(
             id_token,
             signing_key.key,
