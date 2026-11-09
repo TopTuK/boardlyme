@@ -49,7 +49,9 @@ def _google_payload() -> dict:
     return {"code": "auth-code", "redirect_uri": "http://localhost:8080/auth/signin-google"}
 
 
-def test_google_login_disabled_without_config(client):
+def test_google_login_disabled_without_config(client, monkeypatch):
+    monkeypatch.setattr(settings, "google_client_id", "")
+    monkeypatch.setattr(settings, "google_client_secret", "")
     assert client.post("/api/auth/google", json=_google_payload()).status_code == 503
 
 

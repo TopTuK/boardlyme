@@ -158,7 +158,9 @@ export default {
   login: {
     access: 'Контроль доступа',
     title: 'Вход',
-    text: 'Boardly знает тебя по Telegram — паролей здесь нет.',
+    text: 'Boardly входит через Google — паролей здесь нет.',
+    googleInactive: 'Вход через Google выключен: задай GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET (см. README).',
+    legacy: 'Старый вход — Telegram (скоро уберём)',
     inactive: 'Вход через Telegram выключен: задай BOT_USERNAME / BOT_TOKEN (см. README).',
     miniFailed: 'Автовход Mini App не удался',
     retry: 'Повторить',

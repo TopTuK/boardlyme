@@ -158,7 +158,9 @@ export default {
   login: {
     access: 'Access Control',
     title: 'Log in',
-    text: 'Boardly uses your Telegram identity — there are no passwords here.',
+    text: 'Boardly uses your Google account — there are no passwords here.',
+    googleInactive: 'Google login is inactive: set GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET (see README).',
+    legacy: 'Legacy sign-in — Telegram (will be removed)',
     inactive: 'Telegram login is inactive: set BOT_USERNAME / BOT_TOKEN (see README).',
     miniFailed: 'Mini App auto-login failed',
     retry: 'Retry',

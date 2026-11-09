@@ -73,27 +73,38 @@ onMounted(async () => {
       </header>
 
       <div class="space-y-5 px-5 py-5">
-        <!-- Telegram Login Widget -->
+        <!-- Google sign-in (primary) -->
         <section>
           <h1 class="text-xl font-black uppercase tracking-tight">{{ t('login.title') }}</h1>
           <p class="mt-1 text-[13px] leading-relaxed text-steel">
             {{ t('login.text') }}
           </p>
-          <div ref="widgetHost" class="mt-4 min-h-[40px]"></div>
+          <Btn
+            v-if="auth.meta?.google_client_id"
+            class="mt-4 w-full"
+            :disabled="busy"
+            @click="loginGoogle"
+          >
+            {{ t('login.google') }}
+          </Btn>
+          <p
+            v-else-if="auth.meta"
+            class="mt-4 font-mono text-[10px] uppercase leading-relaxed tracking-widest text-steel"
+          >
+            {{ t('login.googleInactive') }}
+          </p>
+        </section>
+
+        <!-- Telegram Login Widget (legacy, kept for the migration window) -->
+        <section class="border-t border-line pt-4">
+          <p class="font-mono text-[10px] uppercase tracking-widest text-steel">{{ t('login.legacy') }}</p>
+          <div ref="widgetHost" class="mt-3 min-h-[40px]"></div>
           <p
             v-if="auth.meta && !auth.meta.bot_username"
             class="mt-2 font-mono text-[10px] uppercase leading-relaxed tracking-widest text-steel"
           >
             {{ t('login.inactive') }}
           </p>
-          <Btn
-            v-if="auth.meta?.google_client_id"
-            class="mt-3 w-full"
-            :disabled="busy"
-            @click="loginGoogle"
-          >
-            {{ t('login.google') }}
-          </Btn>
         </section>
 
         <!-- Telegram Mini App retry -->
