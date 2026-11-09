@@ -31,7 +31,10 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
-    telegram_id: Mapped[int] = mapped_column(BigInteger, unique=True, index=True)
+    # Nullable: Google-only accounts have no Telegram identity.
+    telegram_id: Mapped[int | None] = mapped_column(BigInteger, unique=True, index=True)
+    google_sub: Mapped[str | None] = mapped_column(String(255), unique=True, index=True)
+    email: Mapped[str | None] = mapped_column(String(320))
     username: Mapped[str | None] = mapped_column(String(100))
     first_name: Mapped[str | None] = mapped_column(String(200))
     last_name: Mapped[str | None] = mapped_column(String(200))
@@ -39,6 +42,14 @@ class User(Base):
     # Interface language: "en" or "ru". Also used for the daily Telegram digest.
     locale: Mapped[str] = mapped_column(String(5), nullable=False, default="en", server_default="en")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    @property
+    def telegram_linked(self) -> bool:
+        return self.telegram_id is not None
+
+    @property
+    def google_linked(self) -> bool:
+        return self.google_sub is not None
 
 
 class Project(Base):

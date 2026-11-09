@@ -6,8 +6,18 @@ from sqlalchemy import select
 from app.config import settings
 from app.deps import DbDep
 from app.deps import UserDep
+from app.google import exchange_code
 from app.models import User
-from app.schemas import DevLoginIn, MiniAppAuthIn, RefreshIn, TokenPair, UserOut, UserSettingsIn, WidgetAuthIn
+from app.schemas import (
+    DevLoginIn,
+    GoogleAuthIn,
+    MiniAppAuthIn,
+    RefreshIn,
+    TokenPair,
+    UserOut,
+    UserSettingsIn,
+    WidgetAuthIn,
+)
 from app.security import create_token_pair, decode_token
 from app.telegram import extract_telegram_user, verify_telegram_query
 
@@ -72,6 +82,107 @@ async def _login_with_telegram_payload(db, raw: str, *, webapp: bool) -> TokenPa
 async def widget_login(body: WidgetAuthIn, db: DbDep) -> TokenPair:
     """Exchange a Telegram Login Widget redirect payload for app tokens."""
     return await _login_with_telegram_payload(db, body.data, webapp=False)
+
+
+async def _verified_google_claims(body: GoogleAuthIn) -> dict:
+    if not settings.google_client_id or not settings.google_client_secret:
+        raise HTTPException(status_code=503, detail="Google sign-in is not configured")
+    claims = await exchange_code(body.code, body.redirect_uri)
+    if claims is None:
+        raise HTTPException(status_code=401, detail="Invalid Google authorization code")
+    return claims
+
+
+async def _upsert_google_user(db, claims: dict) -> User:
+    sub = claims["sub"]
+    user = (
+        await db.execute(select(User).where(User.google_sub == sub))
+    ).scalar_one_or_none()
+
+    email = claims.get("email")
+    first_name = claims.get("given_name") or claims.get("name")
+    last_name = claims.get("family_name")
+    photo_url = claims.get("picture")
+
+    if user is None:
+        user = User(
+            google_sub=sub,
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            photo_url=photo_url,
+        )
+        db.add(user)
+    else:
+        if email:
+            user.email = email
+        if first_name:
+            user.first_name = first_name
+        if last_name:
+            user.last_name = last_name
+        if photo_url:
+            user.photo_url = photo_url
+
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+
+@router.post("/google", response_model=TokenPair)
+async def google_login(body: GoogleAuthIn, db: DbDep) -> TokenPair:
+    """Exchange a Google authorization code for app tokens."""
+    claims = await _verified_google_claims(body)
+    user = await _upsert_google_user(db, claims)
+    return _token_pair(user)
+
+
+@router.post("/google/link", response_model=UserOut)
+async def link_google(body: GoogleAuthIn, user: UserDep, db: DbDep) -> UserOut:
+    """Attach a Google identity to the signed-in account."""
+    claims = await _verified_google_claims(body)
+    sub = claims["sub"]
+    existing = (
+        await db.execute(select(User).where(User.google_sub == sub))
+    ).scalar_one_or_none()
+    if existing is not None and existing.id != user.id:
+        raise HTTPException(status_code=409, detail="This Google account is linked to another user")
+    user.google_sub = sub
+    if claims.get("email"):
+        user.email = claims["email"]
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+
+@router.post("/telegram/link", response_model=UserOut)
+async def link_telegram(body: WidgetAuthIn, user: UserDep, db: DbDep) -> UserOut:
+    """Attach a Telegram identity (Login Widget payload) to the signed-in account."""
+    if not settings.bot_token:
+        raise HTTPException(status_code=503, detail="BOT_TOKEN is not configured")
+    data = verify_telegram_query(body.data, settings.bot_token, webapp=False)
+    if data is None:
+        raise HTTPException(status_code=401, detail="Invalid Telegram signature")
+    tg_user = extract_telegram_user(data)
+    if tg_user is None:
+        raise HTTPException(status_code=400, detail="Payload contains no user data")
+    telegram_id = int(tg_user["id"])
+    existing = (
+        await db.execute(select(User).where(User.telegram_id == telegram_id))
+    ).scalar_one_or_none()
+    if existing is not None and existing.id != user.id:
+        raise HTTPException(status_code=409, detail="This Telegram account is linked to another user")
+    user.telegram_id = telegram_id
+    if tg_user.get("username"):
+        user.username = tg_user["username"]
+    if tg_user.get("first_name"):
+        user.first_name = tg_user["first_name"]
+    if tg_user.get("last_name"):
+        user.last_name = tg_user["last_name"]
+    if tg_user.get("photo_url"):
+        user.photo_url = tg_user["photo_url"]
+    await db.commit()
+    await db.refresh(user)
+    return user
 
 
 @router.post("/telegram/miniapp", response_model=TokenPair)

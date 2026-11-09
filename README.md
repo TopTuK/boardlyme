@@ -415,6 +415,8 @@ always wins over the file.
 |----------|---------|---------|
 | `BOT_TOKEN` | *(empty)* | Telegram bot token (artifact 1). Required for real auth and reminders; empty = dev mode. |
 | `BOT_USERNAME` | *(empty)* | Bot username without `@` — renders the Login Widget. |
+| `GOOGLE_CLIENT_ID` | *(empty)* | Google OAuth client id — enables the "Sign in with Google" button. Register `<APP_URL>/auth/signin-google` as a redirect URI in Google Cloud Console. |
+| `GOOGLE_CLIENT_SECRET` | *(empty)* | Google OAuth client secret (starts with `GOCSPX-`). |
 | `APP_URL` | `http://localhost:8080` | Public site URL; must match the BotFather domain (artifact 2) in production. |
 | `JWT_SECRET` | `dev-secret-change-me` | JWT signing secret. **Change in production.** |
 | `DEV_FAKE_AUTH` | `1` | `1` enables the no-Telegram dev login (Alice/Bob). **Set `0` in production.** |

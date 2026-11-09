@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     bot_token: str = ""
     bot_username: str = ""
 
+    # Google OAuth (authorization-code flow). Empty disables Google sign-in.
+    google_client_id: str = ""
+    google_client_secret: str = ""
+
     # Public URL of the website (must match the domain registered in BotFather)
     app_url: str = "http://localhost:8080"
 

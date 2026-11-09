@@ -13,4 +13,5 @@ async def meta() -> dict:
         "bot_username": settings.bot_username or None,
         "app_url": settings.app_url,
         "dev_fake_auth": settings.dev_fake_auth,
+        "google_client_id": settings.google_client_id or None,
     }
